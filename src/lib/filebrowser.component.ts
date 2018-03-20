@@ -26,7 +26,7 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
     public uploadprogress: number = null;
 
     public hasImages = false;
-    public fileList: any[] = [];
+    public fileList: File[] = [];
 
     public isAdminRole = false;
 
@@ -63,11 +63,18 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
                     break;
                 }
             }
+
             if (foundFilesType) {
                 event.preventDefault();
                 this.showDropZone = true;
             }
         }
+    }
+
+    @HostListener('document:dragleave', ['$event'])
+    public dragLeave(event: DragEvent) {
+        this.draggingOverDropZone = false;
+        this.showDropZone = false;
     }
 
     @HostListener('document:drop', ['$event'])
@@ -99,13 +106,15 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
     }
 
 
-    public uploadFiles(files: File[]) {
-        console.log('upload files', files);
+    public uploadFiles(files: FileList) {
+        Array.from(files).forEach(file => this.fileList.push(file));
     }
 
 
 
-    public deleteFile(fileListItem: any) {
-
+    public deleteFile(file: File) {
+        this.fileList.splice(
+                this.fileList.findIndex(f => f === file),
+                1);
     }
 }

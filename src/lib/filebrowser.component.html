@@ -9,47 +9,44 @@
         border: #5D9715 solid 5px;        
     }
     </style>
-<div style="width: 100%; height: 100%;"
-    *ngIf="showDropZone"
-    [ngClass]="{'dropzonehighlight': showDropZone, 'overdropzone': draggingOverDropZone}" 
-    (dragover)="draggingOverDropZone=true" 
-    (dragleave)="draggingOverDropZone=false" 
-    (drop)="dropFiles($event)">
-    <h1>Drop files here</h1>                              
-</div>
-<div style="width: 100%; height: 100%" *ngIf="!showDropZone">
-    
+<div style="display: flex; flex-direction: column; width: 100%; height: 100%">
+    <div>
     <mat-toolbar style="width: 100%; display: flex;">
         <h3>
-            {{title ? title : 'File attachments'}}
+            File attachments
         </h3>
         <span style="flex-grow: 1"></span>
         <button mat-icon-button (click)="attachFilesClicked()" mdTooltip="Select a file from your computer and upload">
             <mat-icon>file_upload</mat-icon>
         </button>
         <input #attachmentFileUploadInput type="file" [hidden]="true" multiple (change)="onFilesSelected($event)" />
-        <button mat-icon-button (click)="showGuidelines()">
-            <mat-icon>help</mat-icon>
-        </button>
     </mat-toolbar>
+    </div>
     <mat-progress-bar *ngIf="uploadprogress!=null" style="width: 100%"
             mode="determinate"
             [value]="uploadprogress"
         >
     </mat-progress-bar>        
+    <div
+        *ngIf="showDropZone"
+        style="flex-grow: 1"
+        [ngClass]="{'dropzonehighlight': showDropZone, 'overdropzone': draggingOverDropZone}" 
+        (dragover)="draggingOverDropZone=true" 
+        (dragleave)="draggingOverDropZone=false" 
+        (drop)="dropFiles($event)">
+        <h1>Drop files here</h1>                              
+    </div>
     
-    
-    <div>
+    <div style="overflow-y: auto; flex-grow: 1" *ngIf="!showDropZone">
         <mat-nav-list *ngIf="!hasImages">
             <mat-list-item *ngFor="let file of fileList">
                 <img *ngIf="file.isImage" matListAvatar [src]="'/PetrusFileManager/DownloadFileServlet?id='+file.fileId+'&remoteAuthToken='+fileManagerService.remoteAuthToken" />
-                <a mat-line target="_blank" mdTooltip="Download file" 
-               [href]="'/PetrusFileManager/DownloadFileServlet?id='+file.fileId+'&remoteAuthToken='+fileManagerService.remoteAuthToken">{{file.fileName}}</a>
-                <p *ngIf="fileManagerService.isAdminRole">
-                    <button mat-icon-button mdTooltip="Delete file" (click)="deleteFile(file)">
-                        <mat-icon>delete</mat-icon>
-                    </button>
-                </p>
+                <a mat-line target="_blank" mdTooltip="Download file">{{file.name}}</a>
+                
+                <button mat-icon-button mdTooltip="Delete file" (click)="deleteFile(file)">
+                    <mat-icon>delete</mat-icon>
+                </button>
+
             </mat-list-item>
         </mat-nav-list>    
         <mat-grid-list *ngIf="hasImages" cols="2" rowHeight="2:1">
