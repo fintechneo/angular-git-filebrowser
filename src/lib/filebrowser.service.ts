@@ -1,5 +1,6 @@
 
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observable } from 'rxjs/Observable';
 
 export class FileInfo {
     name: string;
@@ -11,6 +12,9 @@ export class FileInfo {
     isDir: boolean;
 }
 
-export class FileBrowserService {
+export abstract class FileBrowserService {
     fileList: BehaviorSubject<FileInfo[]> = new BehaviorSubject([]);
+
+    abstract uploadFile(file: File): Observable<any>;
+    abstract readdir(): Observable<FileInfo[]>;
 }

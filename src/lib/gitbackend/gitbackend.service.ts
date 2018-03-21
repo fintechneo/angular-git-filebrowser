@@ -101,4 +101,17 @@ export class GitBackendService extends FileBrowserService {
         this.callWorker((params) => FS.chdir(params.name), {name: name})
             .then(() => this.readdir().subscribe());
     }
+
+    uploadFile(file: File): Observable<any> {
+        return new Observable(observer => {
+            this.callWorker((params) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', params.url, false);
+                xhr.send();
+                FS.writeFile(params.name, xhr.response);
+                console.log('Written file', params.name);
+            }, {url: URL.createObjectURL(file), name: file.name})
+                .then(() => observer.next(file.name));
+        });
+    }
 }

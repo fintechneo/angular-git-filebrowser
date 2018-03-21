@@ -8,7 +8,8 @@ import { MatSnackBar, MatDialog } from '@angular/material';
 import { Observable } from 'rxjs/Observable';
 
 import { ActivatedRoute } from '@angular/router';
-import { mergeMap, map } from 'rxjs/operators';
+import { mergeMap, map, take, bufferCount } from 'rxjs/operators';
+import { from } from 'rxjs/observable/from';
 import { FileBrowserService } from './filebrowser.module';
 
 @Component({
@@ -107,10 +108,20 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
 
 
     public uploadFiles(files: FileList) {
-        Array.from(files).forEach(file => this.fileList.push(file));
+        const numfiles = files.length;
+
+        from(Array.from(files).map(file =>
+            this.filebrowserservice.uploadFile(file)
+        )).pipe(
+            mergeMap(o =>
+                o.pipe(
+                  take(1)
+                ), 1),
+            bufferCount(numfiles),
+            mergeMap(() => this.filebrowserservice.readdir())
+        )
+        .subscribe(() => console.log('Done uploading', numfiles));
     }
-
-
 
     public deleteFile(file: File) {
         this.fileList.splice(
