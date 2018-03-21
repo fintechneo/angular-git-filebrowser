@@ -48,10 +48,18 @@ export class GitBackendService {
 
     }
 
-    callWorker(func): Promise<any> {
+    callWorker(func, params?: any): Promise<any> {
         return new Promise((resolve, reject) => {
             this.worker.onmessage = (msg) => resolve(msg.data);
-            this.worker.postMessage('(' + func.toString() + ')()');
+            const workerMessage = '(' + func.toString() + ')(' + (params ? JSON.stringify(params) : '') + ')';
+            this.worker.postMessage(workerMessage);
         });
+    }
+
+    clone(url: string) {
+        this.callWorker((params) => {
+                self.jsgitclone(params.url, 'workdir');
+            }, {url: url})
+            .then(() => console.log('cloned confirmation received'));
     }
 }
