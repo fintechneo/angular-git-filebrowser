@@ -81,8 +81,7 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
     public invalidDrop(event: DragEvent) {
         console.log('Drop outside valid drop target');
         event.preventDefault();
-        this.draggingOverDropZone = false;
-        this.showDropZone = false;
+        this.hideDropZone();
     }
 
 
