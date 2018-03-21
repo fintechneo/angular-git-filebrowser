@@ -13,7 +13,7 @@
     <div>
     <mat-toolbar style="width: 100%; display: flex;">
         <h3>
-            File attachments
+            Files
         </h3>
         <span style="flex-grow: 1"></span>
         <button mat-icon-button (click)="attachFilesClicked()" mdTooltip="Select a file from your computer and upload">
@@ -39,9 +39,9 @@
     
     <div style="overflow-y: auto; flex-grow: 1" *ngIf="!showDropZone">
         <mat-nav-list *ngIf="!hasImages">
-            <mat-list-item *ngFor="let file of fileList">
-                <img *ngIf="file.isImage" matListAvatar [src]="'/PetrusFileManager/DownloadFileServlet?id='+file.fileId+'&remoteAuthToken='+fileManagerService.remoteAuthToken" />
-                <a mat-line target="_blank" mdTooltip="Download file">{{file.name}}</a>
+            <mat-list-item *ngFor="let file of filebrowserservice.fileList | async">
+                <!-- <img *ngIf="file.isImage" matListAvatar  /> -->
+                <a mat-line target="_blank" mdTooltip="Download file">{{file}}</a>
                 
                 <button mat-icon-button mdTooltip="Delete file" (click)="deleteFile(file)">
                     <mat-icon>delete</mat-icon>

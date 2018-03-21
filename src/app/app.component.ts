@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
-import { GitBackendService } from './gitbackend/gitbackend.service';
+
 import { mergeMap, map } from 'rxjs/operators';
+import { FileBrowserService } from '../lib/filebrowser.module';
+import { GitBackendService } from '../lib/gitbackend/gitbackend.service';
 
 @Component({
   selector: 'app-root',
@@ -10,12 +12,14 @@ import { mergeMap, map } from 'rxjs/operators';
 export class AppComponent {
   title = 'app';
   showfilebrowser = true;
-  gitrepositoryurl = 'https://github.com/fintechneo/browsergittestdata.git';
+  gitrepositoryurl = 'https://github.com/fintechneo/ngmakelib.git';
+
+  gitbackendservice: GitBackendService;
 
   constructor(
-    private gitbackendservice: GitBackendService
+    private filebrowserservice: FileBrowserService
   ) {
-
+    this.gitbackendservice = this.filebrowserservice as GitBackendService;
   }
 
   clone() {

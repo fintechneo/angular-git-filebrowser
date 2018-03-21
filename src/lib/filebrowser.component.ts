@@ -9,6 +9,7 @@ import { Observable } from 'rxjs/Observable';
 
 import { ActivatedRoute } from '@angular/router';
 import { mergeMap, map } from 'rxjs/operators';
+import { FileBrowserService } from './filebrowser.module';
 
 @Component({
     selector: 'app-filebrowser',
@@ -33,8 +34,8 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
     constructor(
         private renderer: Renderer2,
         private snackbar: MatSnackBar,
-        private dialog: MatDialog
-
+        private dialog: MatDialog,
+        private filebrowserservice: FileBrowserService
     ) {
 
 

@@ -7,7 +7,7 @@ import { MatGridListModule, MatListModule,
         MatDialogModule,
         MatButtonModule} from '@angular/material';
 import { CommonModule } from '@angular/common';
-
+export { FileBrowserService } from './filebrowser.service';
 
 @NgModule({
     imports: [

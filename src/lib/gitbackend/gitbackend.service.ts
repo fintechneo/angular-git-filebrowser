@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { AsyncSubject } from 'rxjs/AsyncSubject';
 import { Observable } from 'rxjs/Observable';
+import { FileBrowserService } from '../filebrowser.module';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 declare var importScripts;
 declare var Module;
@@ -9,12 +11,13 @@ declare var IDBFS;
 declare var self;
 
 @Injectable()
-export class GitBackendService {
+export class GitBackendService extends FileBrowserService {
 
     workerReady: AsyncSubject<boolean> = new AsyncSubject();
 
     worker: Worker;
     constructor() {
+        super();
         this.worker = new Worker('assets/stupid_worker.js');
         // Set up emscripten with libgit2
         this.callWorker(() => {
@@ -72,7 +75,13 @@ export class GitBackendService {
             this.callWorker(() => {
                     return FS.readdir('.');
                 })
-                .then((ret) => observer.next(ret));
+                .then((ret: string[]) => {
+                    console.log(ret);
+                    this.fileList.next(
+                        ret.filter(s => s[0] !== '.')
+                    );
+                    observer.next(ret);
+                });
             });
     }
 }

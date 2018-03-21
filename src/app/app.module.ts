@@ -2,10 +2,10 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
-import { FileBrowserModule } from '../lib/filebrowser.module';
+import { FileBrowserModule, FileBrowserService } from '../lib/filebrowser.module';
 import { FormsModule } from '@angular/forms';
-import { GitBackendModule } from './gitbackend/gitbackend.module';
-import { GitBackendService } from './gitbackend/gitbackend.service';
+import { GitBackendModule } from '../lib/gitbackend/gitbackend.module';
+import { GitBackendService } from '../lib/gitbackend/gitbackend.service';
 
 @NgModule({
   declarations: [
@@ -17,11 +17,10 @@ import { GitBackendService } from './gitbackend/gitbackend.service';
     FileBrowserModule,
     GitBackendModule
   ],
-  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor(gitbackend: GitBackendService) {
+  constructor() {
 
   }
 }
