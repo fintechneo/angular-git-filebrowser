@@ -8,6 +8,12 @@
     .overdropzone {
         border: #5D9715 solid 5px;        
     }
+    mat-list-item .visibleOnHover {
+        display: none;
+    }
+    mat-list-item:hover .visibleOnHover {
+        display: inherit;
+    }
     </style>
 <div style="display: flex; flex-direction: column; width: 100%; height: 100%">
     <div>
@@ -38,32 +44,17 @@
     </div>
     
     <div style="overflow-y: auto; flex-grow: 1" *ngIf="!showDropZone">
-        <mat-nav-list *ngIf="!hasImages">
+        <mat-nav-list>
             <mat-list-item *ngFor="let file of filebrowserservice.fileList | async">
                 <!-- <img *ngIf="file.isImage" matListAvatar  /> -->
-                <a mat-line target="_blank" mdTooltip="Download file">{{file}}</a>
+                <mat-icon mat-list-icon *ngIf="file.isDir">folder</mat-icon>
+                <a mat-line target="_blank" mdTooltip="Download file">{{file.name}}</a>
                 
-                <button mat-icon-button mdTooltip="Delete file" (click)="deleteFile(file)">
+                <button mat-icon-button class="visibleOnHover" mdTooltip="Delete file" (click)="deleteFile(file)">
                     <mat-icon>delete</mat-icon>
                 </button>
 
             </mat-list-item>
-        </mat-nav-list>    
-        <mat-grid-list *ngIf="hasImages" cols="2" rowHeight="2:1">
-            <mat-grid-tile *ngFor="let file of fileList">
-                <img *ngIf="file.isImage" matListAvatar [src]="'/PetrusFileManager/DownloadFileServlet?id='+file.fileId+'&remoteAuthToken='+fileManagerService.remoteAuthToken" />
-                <mat-icon *ngIf="!file.isImage">attachment</mat-icon>
-                <mat-grid-tile-footer style="display: flex">
-                    <a mat-button target="_blank" mdTooltip="Download file" 
-                        [href]="'/PetrusFileManager/DownloadFileServlet?id='+file.fileId+'&remoteAuthToken='+fileManagerService.remoteAuthToken">
-                        {{file.fileName}}
-                    </a>
-                    <span style="flex: 1 1 auto"></span>
-                    <button mat-icon-button mdTooltip="Delete file" (click)="deleteFile(file)">
-                        <mat-icon>delete</mat-icon>
-                    </button>
-                </mat-grid-tile-footer>
-            </mat-grid-tile>            
-        </mat-grid-list>
+        </mat-nav-list>            
     </div>
 </div>

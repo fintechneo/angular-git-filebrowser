@@ -3,6 +3,7 @@ import { AsyncSubject } from 'rxjs/AsyncSubject';
 import { Observable } from 'rxjs/Observable';
 import { FileBrowserService } from '../filebrowser.module';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { FileInfo } from '../filebrowser.service';
 
 declare var importScripts;
 declare var Module;
@@ -70,16 +71,24 @@ export class GitBackendService extends FileBrowserService {
             });
     }
 
-    readdir(): Observable<string[]> {
+    readdir(): Observable<FileInfo[]> {
         return new Observable(observer => {
             this.callWorker(() => {
-                    return FS.readdir('.');
+                    return FS.readdir('.')
+                            .filter(s => s[0] !== '.')
+                            .map(name => Object.assign({
+                                name: name
+                            }, FS.stat(name))
+                            )
+                            .map(fileinfo =>
+                                Object.assign(fileinfo,
+                                    { isDir: FS.isDir(fileinfo.mode) }
+                                )
+                            );
                 })
-                .then((ret: string[]) => {
+                .then((ret: FileInfo[]) => {
                     console.log(ret);
-                    this.fileList.next(
-                        ret.filter(s => s[0] !== '.')
-                    );
+                    this.fileList.next(ret);
                     observer.next(ret);
                 });
             });
