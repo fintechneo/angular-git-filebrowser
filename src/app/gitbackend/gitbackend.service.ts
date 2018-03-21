@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AsyncSubject } from 'rxjs/AsyncSubject';
+import { Observable } from 'rxjs/Observable';
 
 declare var importScripts;
 declare var Module;
@@ -56,10 +57,22 @@ export class GitBackendService {
         });
     }
 
-    clone(url: string) {
-        this.callWorker((params) => {
-                self.jsgitclone(params.url, 'workdir');
-            }, {url: url})
-            .then(() => console.log('cloned confirmation received'));
+    clone(url: string): Observable<any> {
+        return new Observable(observer => {
+            this.callWorker((params) => {
+                    self.jsgitclone(params.url, 'workdir');
+                    FS.chdir('workdir');
+                }, {url: url})
+                .then(() => observer.next());
+            });
+    }
+
+    readdir(): Observable<string[]> {
+        return new Observable(observer => {
+            this.callWorker(() => {
+                    return FS.readdir('.');
+                })
+                .then((ret) => observer.next(ret));
+            });
     }
 }

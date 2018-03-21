@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { GitBackendService } from './gitbackend/gitbackend.service';
+import { mergeMap, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +19,12 @@ export class AppComponent {
   }
 
   clone() {
-    this.gitbackendservice.clone(this.gitrepositoryurl);
+    this.gitbackendservice.clone(this.gitrepositoryurl)
+      .pipe(
+        mergeMap(() => this.gitbackendservice.readdir()),
+        map((dircontent) => console.log(dircontent))
+      )
+      .subscribe();
+
   }
 }
