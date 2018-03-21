@@ -8,3 +8,5 @@ npm start
 navigate your browser to `http://localhost:4200`
 
 Click the `clone` button to clone the selected repository. Access to github is via a proxy that can be configured using `proxy.conf.json` (change to another organization then fintechneo if you want to test your own repositories).
+
+A quick video demonstration of what you can expect to see is here: https://youtu.be/rcBluzpUWE4
