@@ -45,16 +45,17 @@
     
     <div style="overflow-y: auto; flex-grow: 1" *ngIf="!showDropZone">
         <mat-nav-list>
-            <mat-list-item *ngFor="let file of filebrowserservice.fileList | async">
-                <!-- <img *ngIf="file.isImage" matListAvatar  /> -->
-                <mat-icon mat-list-icon *ngIf="file.isDir">folder</mat-icon>
-                <a mat-line target="_blank" mdTooltip="Download file">{{file.name}}</a>
+            <ng-container *ngFor="let file of filebrowserservice.fileList | async">
+                <a mat-list-item *ngIf="file.isDir" (click)="filebrowserservice.changedir(file.name)">
+                    <mat-icon mat-list-icon *ngIf="file.isDir">folder</mat-icon>
+                    <p mat-line>{{file.name}}</p>               
+                </a>
                 
-                <button mat-icon-button class="visibleOnHover" mdTooltip="Delete file" (click)="deleteFile(file)">
-                    <mat-icon>delete</mat-icon>
-                </button>
+                <a mat-list-item *ngIf="!file.isDir">
+                    <p mat-line>{{file.name}}</p>
+                </a>
 
-            </mat-list-item>
+            </ng-container>
         </mat-nav-list>            
     </div>
 </div>

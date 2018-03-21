@@ -4,6 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import { FileBrowserService } from '../filebrowser.module';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FileInfo } from '../filebrowser.service';
+import { mergeMap } from 'rxjs/operators';
 
 declare var importScripts;
 declare var Module;
@@ -62,20 +63,23 @@ export class GitBackendService extends FileBrowserService {
     }
 
     clone(url: string): Observable<any> {
-        return new Observable(observer => {
-            this.callWorker((params) => {
-                    self.jsgitclone(params.url, 'workdir');
-                    FS.chdir('workdir');
-                }, {url: url})
-                .then(() => observer.next());
-            });
+        return this.workerReady
+            .pipe(mergeMap(() =>
+                new Observable(observer => {
+                this.callWorker((params) => {
+                        self.jsgitclone(params.url, 'workdir');
+                        FS.chdir('workdir');
+                    }, {url: url})
+                    .then(() => observer.next());
+                })
+            )
+        );
     }
 
     readdir(): Observable<FileInfo[]> {
         return new Observable(observer => {
             this.callWorker(() => {
                     return FS.readdir('.')
-                            .filter(s => s[0] !== '.')
                             .map(name => Object.assign({
                                 name: name
                             }, FS.stat(name))
@@ -87,10 +91,14 @@ export class GitBackendService extends FileBrowserService {
                             );
                 })
                 .then((ret: FileInfo[]) => {
-                    console.log(ret);
                     this.fileList.next(ret);
                     observer.next(ret);
                 });
             });
+    }
+
+    changedir(name: string) {
+        this.callWorker((params) => FS.chdir(params.name), {name: name})
+            .then(() => this.readdir().subscribe());
     }
 }
