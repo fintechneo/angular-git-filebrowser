@@ -18,8 +18,6 @@ import { FileInfo } from './filebrowser.service';
     templateUrl: 'filebrowser.component.html'
 })
 export class FileBrowserComponent implements OnInit, AfterViewInit {
-    organizationAbbreviation = '-';
-    countryAlpha3Code = '-';
     dropText = 'Drop file here';
 
     @ViewChild('attachmentFileUploadInput') fileUploadInput: any;
@@ -28,10 +26,8 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
     public draggingOverDropZone = false;
     public uploadprogress: number = null;
 
-    public hasImages = false;
-    public fileList: File[] = [];
-
-    public isAdminRole = false;
+    renameFile: FileInfo;
+    newFileName: string;
 
     constructor(
         private renderer: Renderer2,
@@ -141,5 +137,17 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
             mergeMap(() => this.filebrowserservice.readdir())
         )
         .subscribe(() => console.log('Done uploading', numfiles));
+    }
+
+    createFolder() {
+        this.filebrowserservice.mkdir('New folder').subscribe();
+    }
+
+    rename(file: FileInfo) {
+        console.log('rename', this.newFileName);
+        this.filebrowserservice.rename(file.name, this.newFileName).subscribe(() => {
+            this.newFileName = null;
+            this.renameFile = null;
+        });
     }
 }

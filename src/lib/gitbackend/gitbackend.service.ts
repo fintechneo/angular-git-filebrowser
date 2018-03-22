@@ -57,7 +57,7 @@ export class GitBackendService extends FileBrowserService {
                 };
             });
         }).then(() => {
-            this.sync(true)
+            this.syncLocalFS(true)
                 .pipe(mergeMap(() => this.readdir()))
                .subscribe(() => {
                     this.workerReady.next(true);
@@ -92,7 +92,7 @@ export class GitBackendService extends FileBrowserService {
                         .then(() => observer.next());
                     })
                 ),
-                mergeMap(() => this.sync(false))
+                mergeMap(() => this.syncLocalFS(false))
             );
     }
 
@@ -130,7 +130,7 @@ export class GitBackendService extends FileBrowserService {
                 .then(() => observer.next(true));
         }).pipe(
             mergeMap(() => this.readdir()),
-            mergeMap(() => this.sync(false))
+            mergeMap(() => this.syncLocalFS(false))
         );
     }
 
@@ -154,7 +154,31 @@ export class GitBackendService extends FileBrowserService {
             }, {url: URL.createObjectURL(file), name: file.name})
                 .then(() => observer.next(file.name));
         }).pipe(
-            mergeMap(() => this.sync(false))
+            mergeMap(() => this.syncLocalFS(false))
+        );
+    }
+
+    mkdir(foldername: string): Observable<any> {
+        return fromPromise(
+            this.callWorker(params => {
+                    FS.mkdir(params.foldername);
+                }, {foldername: foldername}
+            )
+        ).pipe(
+            mergeMap(() => this.readdir()),
+            mergeMap(() => this.syncLocalFS(false))
+        );
+    }
+
+    rename(oldpath: string, newpath: string): Observable<any> {
+        return fromPromise(
+            this.callWorker(params => {
+                    FS.rename(params.oldpath, params.newpath);
+                }, {oldpath: oldpath, newpath: newpath}
+            )
+        ).pipe(
+            mergeMap(() => this.readdir()),
+            mergeMap(() => this.syncLocalFS(false))
         );
     }
 
@@ -162,7 +186,7 @@ export class GitBackendService extends FileBrowserService {
      *
      * @param direction false = write, true = read
      */
-    sync(direction: boolean): Observable<any> {
+    syncLocalFS(direction: boolean): Observable<any> {
         if (this.syncInProgress) {
             return of(true);
         } else {

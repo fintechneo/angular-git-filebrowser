@@ -18,5 +18,7 @@ export abstract class FileBrowserService {
     abstract uploadFile(file: File): Observable<any>;
     abstract readdir(): Observable<FileInfo[]>;
     abstract unlink(filename: string): Observable<any>;
+    abstract mkdir(foldername: string): Observable<any>;
+    abstract rename(oldname: string, newname: string): Observable<any>;
     abstract getDownloadObjectUrl(filename: string): Observable<string>;
 }

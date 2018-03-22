@@ -22,6 +22,9 @@
             Files
         </h3>
         <span style="flex-grow: 1"></span>
+        <button mat-icon-button (click)="createFolder()">
+            <mat-icon>create_new_folder</mat-icon>
+        </button>
         <button mat-icon-button (click)="attachFilesClicked()" mdTooltip="Select a file from your computer and upload">
             <mat-icon>file_upload</mat-icon>
         </button>
@@ -46,20 +49,43 @@
     <div style="overflow-y: auto; flex-grow: 1" *ngIf="!showDropZone">
         <mat-nav-list>
             <ng-container *ngFor="let file of filebrowserservice.fileList | async">
-                <a mat-list-item *ngIf="file.isDir" (click)="filebrowserservice.changedir(file.name)">
-                    <mat-icon mat-list-icon *ngIf="file.isDir">folder</mat-icon>
-                    <p mat-line>{{file.name}}</p>               
-                </a>
-                
-                <mat-list-item *ngIf="!file.isDir">
-                    <a mat-line (click)="openFile(file)">{{file.name}}</a>
-                    <span class="visibleOnHover">
-                        <button mat-icon-button (click)="deleteFile(file)">
-                            <mat-icon>delete</mat-icon>
+                <ng-container *ngIf="file===renameFile">
+                    <mat-list-item>
+                        <mat-icon mat-list-icon *ngIf="file.isDir">folder</mat-icon>
+                        
+                        <mat-form-field mat-line>
+                            <input matInput [(ngModel)]="newFileName" />
+                        </mat-form-field>
+                    
+                        <button mat-icon-button (click)="rename(file)">
+                            <mat-icon>done</mat-icon>
                         </button>
-                    </span>
-                </mat-list-item>
+                        <button mat-icon-button (click)="renameFile=null">
+                            <mat-icon>cancel</mat-icon>
+                        </button>
+                    </mat-list-item>
+                </ng-container>
+                <ng-container *ngIf="file!==renameFile">
+                    <mat-list-item *ngIf="file.isDir">
+                        <mat-icon mat-list-icon *ngIf="file.isDir">folder</mat-icon>
+                        <a (click)="filebrowserservice.changedir(file.name)" mat-line>{{file.name}}</a> 
+                        <span class="visibleOnHover">
+                            <button mat-icon-button (click)="newFileName=file.name;renameFile=file">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                        </span>
+                    </mat-list-item>
+                    
+                    <mat-list-item *ngIf="!file.isDir">
+                        <a mat-line (click)="openFile(file)">{{file.name}}</a>
+                        <span class="visibleOnHover">
+                            <button mat-icon-button (click)="deleteFile(file)">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </span>
+                    </mat-list-item>
 
+                </ng-container>
             </ng-container>
         </mat-nav-list>            
     </div>

@@ -12,7 +12,7 @@ import { GitBackendService } from '../lib/gitbackend/gitbackend.service';
 export class AppComponent {
   title = 'app';
   showfilebrowser = true;
-  gitrepositoryurl = 'https://github.com/fintechneo/ngmakelib.git';
+  gitrepositoryurl = 'https://github.com/fintechneo/browsergittestdata.git';
 
   gitbackendservice: GitBackendService;
 
@@ -25,8 +25,7 @@ export class AppComponent {
   clone() {
     this.gitbackendservice.clone(this.gitrepositoryurl)
       .pipe(
-        mergeMap(() => this.gitbackendservice.readdir()),
-        mergeMap(() => this.gitbackendservice.sync(false))
+        mergeMap(() => this.gitbackendservice.readdir())
       )
       .subscribe();
 
