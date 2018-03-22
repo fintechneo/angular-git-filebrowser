@@ -34,12 +34,13 @@ export class GitBackendService extends FileBrowserService {
         fromPromise(this.callWorker(() => {
 
             return new Promise((resolve, reject) => {
+                const gitworkdir = 'workdir';
                 importScripts('libgit2.js');
                 Module['onRuntimeInitialized'] = () => {
-                    const dir = 'workdir';
-                    FS.mkdir(dir, '0777');
-                    FS.mount(IDBFS, {}, '/' + dir);
-                    FS.chdir('/' + dir);
+
+                    FS.mkdir(gitworkdir, '0777');
+                    FS.mount(IDBFS, {}, '/' + gitworkdir);
+                    FS.chdir('/' + gitworkdir);
 
                     self.jsgitinit = Module.cwrap('jsgitinit', null, []);
                     self.jsgitclone = Module.cwrap('jsgitclone', null, ['string', 'string']);
@@ -54,6 +55,13 @@ export class GitBackendService extends FileBrowserService {
                     self.jsgitshutdown = Module.cwrap('jsgitshutdown', null, []);
                     self.jsgitprintlatestcommit = Module.cwrap('jsgitprintlatestcommit', null, []);
                     self.jsgitcommit = Module.cwrap('jsgitcommit', null, ['string', 'string', 'string', 'number', 'number']);
+                    self.toGitPath = (filename) => {
+                        const currentdir: string[] = FS.cwd().split('/');
+                        console.log(currentdir);
+                        currentdir.splice(0, 3);
+                        return currentdir.join('/') + '/' + filename;
+                    };
+
                     self.jsgitinit();
 
                     resolve();
@@ -144,7 +152,7 @@ export class GitBackendService extends FileBrowserService {
         return new Observable(observer => {
             this.callWorker((params) => {
                 FS.unlink(params.filename);
-                self.jsgitremove(params.filename);
+                self.jsgitremove(self.toGitPath(params.filename));
             }, {filename: filename})
                 .then(() => observer.next(true));
         }).pipe(
@@ -189,8 +197,10 @@ export class GitBackendService extends FileBrowserService {
                 xhr.send();
                 console.log(xhr.response);
                 FS.writeFile(params.name, new Uint8Array(xhr.response), {encoding: 'binary'});
-                self.jsgitadd(params.name);
-                console.log('Added file', params.name);
+
+                const gitpath = self.toGitPath(params.name);
+                self.jsgitadd(gitpath);
+                console.log('Added file', gitpath);
             }, {url: URL.createObjectURL(file), name: file.name})
                 .then(() => {
                     observer.next(file.name);
