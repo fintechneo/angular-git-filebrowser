@@ -162,8 +162,10 @@ export class GitBackendService extends FileBrowserService {
             this.callWorker((params) => {
                 const xhr = new XMLHttpRequest();
                 xhr.open('GET', params.url, false);
+                xhr.responseType = 'arraybuffer';
                 xhr.send();
-                FS.writeFile(params.name, xhr.response);
+                console.log(xhr.response);
+                FS.writeFile(params.name, new Uint8Array(xhr.response), {encoding: 'binary'});
                 console.log('Written file', params.name);
             }, {url: URL.createObjectURL(file), name: file.name})
                 .then(() => observer.next(file.name));
