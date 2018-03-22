@@ -51,9 +51,14 @@
                     <p mat-line>{{file.name}}</p>               
                 </a>
                 
-                <a mat-list-item *ngIf="!file.isDir">
-                    <p mat-line>{{file.name}}</p>
-                </a>
+                <mat-list-item *ngIf="!file.isDir">
+                    <a mat-line>{{file.name}}</a>
+                    <span class="visibleOnHover">
+                        <button mat-icon-button (click)="deleteFile(file)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </span>
+                </mat-list-item>
 
             </ng-container>
         </mat-nav-list>            

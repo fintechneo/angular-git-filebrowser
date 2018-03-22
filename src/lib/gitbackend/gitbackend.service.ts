@@ -91,6 +91,7 @@ export class GitBackendService extends FileBrowserService {
                             );
                 })
                 .then((ret: FileInfo[]) => {
+
                     this.fileList.next(ret);
                     observer.next(ret);
                 });
@@ -100,6 +101,16 @@ export class GitBackendService extends FileBrowserService {
     changedir(name: string) {
         this.callWorker((params) => FS.chdir(params.name), {name: name})
             .then(() => this.readdir().subscribe());
+    }
+
+    unlink(filename: string): Observable<any> {
+        return new Observable(observer => {
+            this.callWorker((params) =>
+                FS.unlink(params.filename), {filename: filename})
+                .then(() => observer.next(true));
+        }).pipe(
+            mergeMap(() => this.readdir())
+        );
     }
 
     uploadFile(file: File): Observable<any> {

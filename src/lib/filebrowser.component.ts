@@ -11,6 +11,7 @@ import { ActivatedRoute } from '@angular/router';
 import { mergeMap, map, take, bufferCount } from 'rxjs/operators';
 import { from } from 'rxjs/observable/from';
 import { FileBrowserService } from './filebrowser.module';
+import { FileInfo } from './filebrowser.service';
 
 @Component({
     selector: 'app-filebrowser',
@@ -107,6 +108,10 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
     }
 
 
+    deleteFile(file: FileInfo) {
+        this.filebrowserservice.unlink(file.name).subscribe((ret) => console.log(ret));
+    }
+
     public uploadFiles(files: FileList) {
         const numfiles = files.length;
 
@@ -121,11 +126,5 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
             mergeMap(() => this.filebrowserservice.readdir())
         )
         .subscribe(() => console.log('Done uploading', numfiles));
-    }
-
-    public deleteFile(file: File) {
-        this.fileList.splice(
-                this.fileList.findIndex(f => f === file),
-                1);
     }
 }
