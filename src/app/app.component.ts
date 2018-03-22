@@ -31,8 +31,12 @@ export class AppComponent {
 
   }
 
-  syncremote() {
+  pull() {
+      this.gitbackendservice.pull().subscribe();
+  }
+
+  push() {
     this.gitbackendservice.commitChanges()
-      .pipe(mergeMap(() => this.gitbackendservice.pullpush())).subscribe();
+      .pipe(mergeMap(() => this.gitbackendservice.push())).subscribe();
   }
 }

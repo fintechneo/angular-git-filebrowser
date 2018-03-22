@@ -47,7 +47,6 @@ export class GitBackendService extends FileBrowserService {
                     self.jsgitadd = Module.cwrap('jsgitadd', null, ['string']);
                     self.jsgitworkdirnumberofdeltas = Module.cwrap('jsgitworkdirnumberofdeltas', 'number', []);
                     self.jsgitaddfileswithchanges = Module.cwrap('jsgitaddfileswithchanges', null, []);
-                    self.jsgitcommit = Module.cwrap('jsgitcommit', null, ['string']);
                     self.jsgitpush = Module.cwrap('jsgitpush', null, []);
                     self.jsgitpull = Module.cwrap('jsgitpull', null, []);
                     self.jsgitshutdown = Module.cwrap('jsgitshutdown', null, []);
@@ -187,7 +186,9 @@ export class GitBackendService extends FileBrowserService {
                 FS.writeFile(params.name, new Uint8Array(xhr.response), {encoding: 'binary'});
                 console.log('Written file', params.name);
             }, {url: URL.createObjectURL(file), name: file.name})
-                .then(() => observer.next(file.name));
+                .then(() => {
+                    observer.next(file.name);
+                });
         }).pipe(
             mergeMap(() => this.syncLocalFS(false))
         );
@@ -217,11 +218,19 @@ export class GitBackendService extends FileBrowserService {
         );
     }
 
-    pullpush() {
+    push() {
+        return fromPromise(
+            this.callWorker(() => {
+                    self.jsgitpush();
+                }, {}
+            )
+        );
+    }
+
+    pull() {
         return fromPromise(
             this.callWorker(() => {
                     self.jsgitpull();
-                    // self.jsgitpush();
                 }, {}
             )
         ).pipe(
