@@ -142,8 +142,10 @@ export class GitBackendService extends FileBrowserService {
 
     unlink(filename: string): Observable<any> {
         return new Observable(observer => {
-            this.callWorker((params) =>
-                FS.unlink(params.filename), {filename: filename})
+            this.callWorker((params) => {
+                FS.unlink(params.filename);
+                self.jsgitremove(params.filename);
+            }, {filename: filename})
                 .then(() => observer.next(true));
         }).pipe(
             mergeMap(() => this.readdir()),
@@ -153,7 +155,8 @@ export class GitBackendService extends FileBrowserService {
 
     commitChanges(): Observable<any> {
         return fromPromise(this.callWorker((params) => {
-            if (self.jsgitworkdirnumberofdeltas() > 0 || self.jsgitstatus() > 0) {
+            self.jsgitstatus();
+            if (self.jsgitworkdirnumberofdeltas() > 0 || self.jsgitstatusresult.length > 0) {
                 self.jsgitaddfileswithchanges();
                 self.jsgitcommit(
                     'Revision ' + new Date().toJSON(),
@@ -186,7 +189,8 @@ export class GitBackendService extends FileBrowserService {
                 xhr.send();
                 console.log(xhr.response);
                 FS.writeFile(params.name, new Uint8Array(xhr.response), {encoding: 'binary'});
-                console.log('Written file', params.name);
+                self.jsgitadd(params.name);
+                console.log('Added file', params.name);
             }, {url: URL.createObjectURL(file), name: file.name})
                 .then(() => {
                     observer.next(file.name);
