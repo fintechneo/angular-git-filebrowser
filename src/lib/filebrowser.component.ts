@@ -109,7 +109,7 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
 
 
     deleteFile(file: FileInfo) {
-        this.filebrowserservice.unlink(file.name).subscribe((ret) => console.log(ret));
+        this.filebrowserservice.unlink(file.name).subscribe();
     }
 
     public uploadFiles(files: FileList) {

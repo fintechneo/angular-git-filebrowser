@@ -4,8 +4,13 @@ import { Observable } from 'rxjs/Observable';
 import { FileBrowserService } from '../filebrowser.module';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FileInfo } from '../filebrowser.service';
-import { mergeMap } from 'rxjs/operators';
+import { mergeMap, merge } from 'rxjs/operators';
+import { of } from 'rxjs/observable/of';
+import { fromPromise } from 'rxjs/observable/fromPromise';
 
+/*
+ * These are used in the worker - but we declare them here so that typescript doesn't complain
+ */
 declare var importScripts;
 declare var Module;
 declare var FS;
@@ -18,10 +23,14 @@ export class GitBackendService extends FileBrowserService {
     workerReady: AsyncSubject<boolean> = new AsyncSubject();
 
     worker: Worker;
+    syncInProgress = false;
+
     constructor() {
         super();
+        // The "stupid" worker is simply evaluating scripts that we pass on to it
         this.worker = new Worker('assets/stupid_worker.js');
-        // Set up emscripten with libgit2
+
+        // Set up emscripten with libgit2 (inside worker)
         this.callWorker(() => {
 
             return new Promise((resolve, reject) => {
@@ -48,12 +57,21 @@ export class GitBackendService extends FileBrowserService {
                 };
             });
         }).then(() => {
-            this.workerReady.next(true),
-                this.workerReady.complete();
+            this.sync(true)
+                .pipe(mergeMap(() => this.readdir()))
+               .subscribe(() => {
+                    this.workerReady.next(true);
+                    this.workerReady.complete();
+                });
         });
 
     }
 
+    /**
+     * Convert function to string source code and send it to the worker for evaluation
+     * @param func the function to send
+     * @param params an object that will be JSON stringified and passed to the function
+     */
     callWorker(func, params?: any): Promise<any> {
         return new Promise((resolve, reject) => {
             this.worker.onmessage = (msg) => resolve(msg.data);
@@ -64,16 +82,18 @@ export class GitBackendService extends FileBrowserService {
 
     clone(url: string): Observable<any> {
         return this.workerReady
-            .pipe(mergeMap(() =>
-                new Observable(observer => {
-                this.callWorker((params) => {
-                        self.jsgitclone(params.url, 'workdir');
-                        FS.chdir('workdir');
-                    }, {url: url})
-                    .then(() => observer.next());
-                })
-            )
-        );
+            .pipe(
+                mergeMap(() =>
+                    new Observable(observer => {
+                    this.callWorker((params) => {
+                            self.jsgitclone(params.url, 'workdir');
+                            FS.chdir('workdir');
+                        }, {url: url})
+                        .then(() => observer.next());
+                    })
+                ),
+                mergeMap(() => this.sync(false))
+            );
     }
 
     readdir(): Observable<FileInfo[]> {
@@ -109,7 +129,8 @@ export class GitBackendService extends FileBrowserService {
                 FS.unlink(params.filename), {filename: filename})
                 .then(() => observer.next(true));
         }).pipe(
-            mergeMap(() => this.readdir())
+            mergeMap(() => this.readdir()),
+            mergeMap(() => this.sync(false))
         );
     }
 
@@ -123,6 +144,31 @@ export class GitBackendService extends FileBrowserService {
                 console.log('Written file', params.name);
             }, {url: URL.createObjectURL(file), name: file.name})
                 .then(() => observer.next(file.name));
-        });
+        }).pipe(
+            mergeMap(() => this.sync(false))
+        );
+    }
+
+    /**
+     *
+     * @param direction false = write, true = read
+     */
+    sync(direction: boolean): Observable<any> {
+        if (this.syncInProgress) {
+            return of(true);
+        } else {
+            this.syncInProgress = true;
+            return new Observable(observer => {
+                this.callWorker((params) =>
+                    new Promise<any>((resolve, reject) =>
+                        FS.syncfs(params.direction, () => resolve())
+                    ),
+                    {direction: direction}
+                ).then(() => {
+                    this.syncInProgress = false;
+                    observer.next();
+                });
+            });
+        }
     }
 }

@@ -26,7 +26,7 @@ export class AppComponent {
     this.gitbackendservice.clone(this.gitrepositoryurl)
       .pipe(
         mergeMap(() => this.gitbackendservice.readdir()),
-        map((dircontent) => console.log(dircontent))
+        mergeMap(() => this.gitbackendservice.sync(false))
       )
       .subscribe();
 
