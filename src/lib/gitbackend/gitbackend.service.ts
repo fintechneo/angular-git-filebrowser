@@ -45,6 +45,8 @@ export class GitBackendService extends FileBrowserService {
                     self.jsgitclone = Module.cwrap('jsgitclone', null, ['string', 'string']);
                     self.jsgitopenrepo = Module.cwrap('jsgitopenrepo', null, []);
                     self.jsgitadd = Module.cwrap('jsgitadd', null, ['string']);
+                    self.jsgitworkdirnumberofdeltas = Module.cwrap('jsgitworkdirnumberofdeltas', 'number', []);
+                    self.jsgitaddfileswithchanges = Module.cwrap('jsgitaddfileswithchanges', null, []);
                     self.jsgitcommit = Module.cwrap('jsgitcommit', null, ['string']);
                     self.jsgitpush = Module.cwrap('jsgitpush', null, []);
                     self.jsgitpull = Module.cwrap('jsgitpull', null, []);
@@ -148,6 +150,23 @@ export class GitBackendService extends FileBrowserService {
         );
     }
 
+    commitChanges(): Observable<any> {
+        return fromPromise(this.callWorker((params) => {
+            if (self.jsgitworkdirnumberofdeltas() > 0) {
+                self.jsgitaddfileswithchanges();
+                self.jsgitcommit(
+                    'Revision ' + new Date().toJSON(),
+                    'emscripten', 'fintechneo',
+                    new Date().getTime() / 1000,
+                    new Date().getTimezoneOffset()
+                );
+                console.log('Changes committed');
+            } else {
+                console.log('No changes');
+            }
+        }));
+    }
+
     getDownloadObjectUrl(filename: string): Observable<string> {
         return fromPromise(
             this.callWorker(params => {
@@ -202,7 +221,7 @@ export class GitBackendService extends FileBrowserService {
         return fromPromise(
             this.callWorker(() => {
                     self.jsgitpull();
-                    self.jsgitpush();
+                    // self.jsgitpush();
                 }, {}
             )
         ).pipe(
