@@ -134,6 +134,15 @@ export class GitBackendService extends FileBrowserService {
         );
     }
 
+    getDownloadObjectUrl(filename: string): Observable<string> {
+        return fromPromise(
+            this.callWorker(params => {
+                    return URL.createObjectURL(new Blob([FS.readFile(params.filename)], { type: 'application/octet-stream' }));
+                }, {filename: filename}
+            )
+        );
+    }
+
     uploadFile(file: File): Observable<any> {
         return new Observable(observer => {
             this.callWorker((params) => {
