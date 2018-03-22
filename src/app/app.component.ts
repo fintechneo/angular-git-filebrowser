@@ -30,4 +30,8 @@ export class AppComponent {
       .subscribe();
 
   }
+
+  pullpush() {
+    this.gitbackendservice.pullpush().subscribe();
+  }
 }

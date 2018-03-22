@@ -150,4 +150,8 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
             this.renameFile = null;
         });
     }
+
+    changedir(file: FileInfo) {
+        this.filebrowserservice.changedir(file.name).subscribe();
+    }
 }

@@ -15,10 +15,11 @@ export class FileInfo {
 export abstract class FileBrowserService {
     fileList: BehaviorSubject<FileInfo[]> = new BehaviorSubject([]);
 
+    abstract changedir(name: string): Observable<any>;
     abstract uploadFile(file: File): Observable<any>;
     abstract readdir(): Observable<FileInfo[]>;
     abstract unlink(filename: string): Observable<any>;
     abstract mkdir(foldername: string): Observable<any>;
-    abstract rename(oldname: string, newname: string): Observable<any>;
+    abstract rename(oldpath: string, newpath: string): Observable<any>;
     abstract getDownloadObjectUrl(filename: string): Observable<string>;
 }

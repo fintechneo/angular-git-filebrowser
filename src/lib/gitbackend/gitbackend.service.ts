@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import { FileBrowserService } from '../filebrowser.module';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FileInfo } from '../filebrowser.service';
-import { mergeMap, merge } from 'rxjs/operators';
+import { mergeMap, merge, map } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 
@@ -31,7 +31,7 @@ export class GitBackendService extends FileBrowserService {
         this.worker = new Worker('assets/stupid_worker.js');
 
         // Set up emscripten with libgit2 (inside worker)
-        this.callWorker(() => {
+        fromPromise(this.callWorker(() => {
 
             return new Promise((resolve, reject) => {
                 importScripts('libgit2.js');
@@ -56,13 +56,25 @@ export class GitBackendService extends FileBrowserService {
                     resolve();
                 };
             });
-        }).then(() => {
-            this.syncLocalFS(true)
-                .pipe(mergeMap(() => this.readdir()))
-               .subscribe(() => {
-                    this.workerReady.next(true);
-                    this.workerReady.complete();
-                });
+        })
+        ).pipe(
+            mergeMap(() => this.syncLocalFS(true)),
+            mergeMap(() => this.readdir()),
+            mergeMap((ret) => {
+                const workdir = ret.find(file => file.name === 'workdir');
+                if (workdir) {
+                    return this.changedir(workdir.name)
+                        .pipe(
+                            mergeMap(() => fromPromise(this.callWorker(() => self.jsgitopenrepo()))),
+                            mergeMap(() => this.readdir())
+                        );
+                } else {
+                    return of(ret);
+                }
+            })
+        ).subscribe(() => {
+            this.workerReady.next(true);
+            this.workerReady.complete();
         });
 
     }
@@ -118,9 +130,11 @@ export class GitBackendService extends FileBrowserService {
             });
     }
 
-    changedir(name: string) {
-        this.callWorker((params) => FS.chdir(params.name), {name: name})
-            .then(() => this.readdir().subscribe());
+    changedir(name: string): Observable<any> {
+        return fromPromise(this.callWorker((params) => FS.chdir(params.name), {name: name})
+            ).pipe(
+                mergeMap(() => this.readdir())
+            );
     }
 
     unlink(filename: string): Observable<any> {
@@ -175,6 +189,19 @@ export class GitBackendService extends FileBrowserService {
             this.callWorker(params => {
                     FS.rename(params.oldpath, params.newpath);
                 }, {oldpath: oldpath, newpath: newpath}
+            )
+        ).pipe(
+            mergeMap(() => this.readdir()),
+            mergeMap(() => this.syncLocalFS(false))
+        );
+    }
+
+    pullpush() {
+        return fromPromise(
+            this.callWorker(() => {
+                    self.jsgitpull();
+                    self.jsgitpush();
+                }, {}
             )
         ).pipe(
             mergeMap(() => this.readdir()),

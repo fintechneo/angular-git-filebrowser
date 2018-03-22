@@ -68,7 +68,7 @@
                 <ng-container *ngIf="file!==renameFile">
                     <mat-list-item *ngIf="file.isDir">
                         <mat-icon mat-list-icon *ngIf="file.isDir">folder</mat-icon>
-                        <a (click)="filebrowserservice.changedir(file.name)" mat-line>{{file.name}}</a> 
+                        <a (click)="changedir(file)" mat-line>{{file.name}}</a> 
                         <span class="visibleOnHover">
                             <button mat-icon-button (click)="newFileName=file.name;renameFile=file">
                                 <mat-icon>edit</mat-icon>
