@@ -45,7 +45,9 @@ export class GitBackendService extends FileBrowserService {
                     self.jsgitclone = Module.cwrap('jsgitclone', null, ['string', 'string']);
                     self.jsgitopenrepo = Module.cwrap('jsgitopenrepo', null, []);
                     self.jsgitadd = Module.cwrap('jsgitadd', null, ['string']);
+                    self.jsgitremove = Module.cwrap('jsgitremove', null, ['string']);
                     self.jsgitworkdirnumberofdeltas = Module.cwrap('jsgitworkdirnumberofdeltas', 'number', []);
+                    self.jsgitstatus = Module.cwrap('jsgitstatus', 'number', []);
                     self.jsgitaddfileswithchanges = Module.cwrap('jsgitaddfileswithchanges', null, []);
                     self.jsgitpush = Module.cwrap('jsgitpush', null, []);
                     self.jsgitpull = Module.cwrap('jsgitpull', null, []);
@@ -151,7 +153,7 @@ export class GitBackendService extends FileBrowserService {
 
     commitChanges(): Observable<any> {
         return fromPromise(this.callWorker((params) => {
-            if (self.jsgitworkdirnumberofdeltas() > 0) {
+            if (self.jsgitworkdirnumberofdeltas() > 0 || self.jsgitstatus() > 0) {
                 self.jsgitaddfileswithchanges();
                 self.jsgitcommit(
                     'Revision ' + new Date().toJSON(),
