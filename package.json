@@ -1,6 +1,6 @@
 {
   "name": "angular-filebrowser",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "scripts": {
     "ng": "ng",
@@ -8,7 +8,9 @@
     "build": "ng build --prod",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "lib": "node ngmakelib-conf.js",
+    "libwatch": "node ngmakelib-conf.js --watch"
   },
   "private": true,
   "dependencies": {
@@ -24,6 +26,7 @@
     "@angular/platform-browser-dynamic": "^5.2.0",
     "@angular/router": "^5.2.0",
     "core-js": "^2.4.1",
+    "ngmakelib": "^0.2.0",
     "rxjs": "^5.5.6",
     "zone.js": "^0.8.19"
   },

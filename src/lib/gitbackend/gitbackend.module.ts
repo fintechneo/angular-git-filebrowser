@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { GitBackendService } from './gitbackend.service';
-import { FileBrowserService } from '../../lib/filebrowser.module';
+import { FileBrowserService } from '../filebrowser.module';
 
 @NgModule({
 
