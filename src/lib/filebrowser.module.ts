@@ -10,7 +10,7 @@ import { MatGridListModule, MatListModule,
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 export { FileBrowserService } from './filebrowser.service';
-export { GitBackendModule } from './gitbackend/gitbackend.module';
+export { GitBackendService } from './gitbackend/gitbackend.service';
 
 @NgModule({
     imports: [

@@ -2,7 +2,7 @@
  *  Copyright 2010-2018 FinTech Neo AS ( fintechneo.com )- All rights reserved
  */
 
-import { Input, ViewChild, Component, Renderer2, AfterViewInit, Inject, OnInit, HostListener } from '@angular/core';
+import { Input, ViewChild, Component, Renderer2, AfterViewInit, Inject, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { Http, URLSearchParams } from '@angular/http';
 import { MatSnackBar, MatDialog } from '@angular/material';
 import { Observable } from 'rxjs/Observable';
@@ -17,7 +17,7 @@ import { FileInfo } from './filebrowser.service';
     selector: 'app-filebrowser',
     templateUrl: 'filebrowser.component.html'
 })
-export class FileBrowserComponent implements OnInit, AfterViewInit {
+export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
     dropText = 'Drop file here';
 
     @ViewChild('attachmentFileUploadInput') fileUploadInput: any;
@@ -153,5 +153,9 @@ export class FileBrowserComponent implements OnInit, AfterViewInit {
 
     changedir(file: FileInfo) {
         this.filebrowserservice.changedir(file.name).subscribe();
+    }
+
+    ngOnDestroy() {
+        console.log('File browser component destroyed');
     }
 }

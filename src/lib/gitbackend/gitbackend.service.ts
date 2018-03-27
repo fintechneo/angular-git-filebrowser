@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { AsyncSubject } from 'rxjs/AsyncSubject';
 import { Observable } from 'rxjs/Observable';
-import { FileBrowserService } from '../filebrowser.module';
+import { FileBrowserService } from '../filebrowser.service';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FileInfo } from '../filebrowser.service';
 import { mergeMap, merge, map } from 'rxjs/operators';
@@ -18,29 +18,37 @@ declare var IDBFS;
 declare var self;
 
 @Injectable()
-export class GitBackendService extends FileBrowserService {
+export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     workerReady: AsyncSubject<boolean> = new AsyncSubject();
 
     worker: Worker;
     syncInProgress = false;
+    mountdir: string;
 
     constructor() {
         super();
+    }
+
+    mount(dir: string): Observable<any> {
+        if (this.mountdir) {
+            Observable.throw('Mount already called');
+        }
+
         // The "stupid" worker is simply evaluating scripts that we pass on to it
         this.worker = new Worker('assets/stupid_worker.js');
 
         // Set up emscripten with libgit2 (inside worker)
-        fromPromise(this.callWorker(() => {
+        return fromPromise(this.callWorker((params) => {
 
             return new Promise((resolve, reject) => {
-                const gitworkdir = 'workdir';
+
                 importScripts('libgit2.js');
                 Module['onRuntimeInitialized'] = () => {
 
-                    FS.mkdir(gitworkdir, '0777');
-                    FS.mount(IDBFS, {}, '/' + gitworkdir);
-                    FS.chdir('/' + gitworkdir);
+                    FS.mkdir(params.workdir, '0777');
+                    FS.mount(IDBFS, {}, '/' + params.workdir);
+                    FS.chdir('/' + params.workdir);
 
                     self.jsgitinit = Module.cwrap('jsgitinit', null, []);
                     self.jsgitclone = Module.cwrap('jsgitclone', null, ['string', 'string']);
@@ -67,7 +75,7 @@ export class GitBackendService extends FileBrowserService {
                     resolve();
                 };
             });
-        })
+        }, {workdir: dir})
         ).pipe(
             mergeMap(() => this.syncLocalFS(true)),
             mergeMap(() => this.readdir()),
@@ -82,12 +90,12 @@ export class GitBackendService extends FileBrowserService {
                 } else {
                     return of(ret);
                 }
+            }),
+            map(() => {
+                this.workerReady.next(true);
+                this.workerReady.complete();
             })
-        ).subscribe(() => {
-            this.workerReady.next(true);
-            this.workerReady.complete();
-        });
-
+        );
     }
 
     /**
@@ -284,6 +292,14 @@ export class GitBackendService extends FileBrowserService {
                     observer.next();
                 });
             });
+        }
+    }
+
+    ngOnDestroy() {
+        if (this.worker) {
+            this.worker.terminate();
+            this.worker = null;
+            console.log('Git backend service terminated');
         }
     }
 }
