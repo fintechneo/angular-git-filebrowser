@@ -8,7 +8,7 @@ import { MatSnackBar, MatDialog } from '@angular/material';
 import { Observable } from 'rxjs/Observable';
 
 import { ActivatedRoute } from '@angular/router';
-import { mergeMap, map, take, bufferCount } from 'rxjs/operators';
+import { mergeMap, map, take, bufferCount, filter } from 'rxjs/operators';
 import { from } from 'rxjs/observable/from';
 import { FileBrowserService } from './filebrowser.module';
 import { FileInfo } from './filebrowser.service';
@@ -33,7 +33,7 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
         private renderer: Renderer2,
         private snackbar: MatSnackBar,
         private dialog: MatDialog,
-        private filebrowserservice: FileBrowserService
+        public filebrowserservice: FileBrowserService
     ) {
 
 
@@ -153,6 +153,26 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
 
     changedir(file: FileInfo) {
         this.filebrowserservice.changedir(file.name).subscribe();
+    }
+
+    /**
+     *
+     * @param indexfromcurrentpatharray (-1 = workdir root, otherwise 0 is first folder in current path array)
+     */
+    goToParent(indexfromcurrentpatharray: number) {
+        this.filebrowserservice.currentpath
+            .pipe(
+                take(1),
+                filter(p => p.length > indexfromcurrentpatharray + 1),
+                mergeMap(p =>
+                    this.filebrowserservice.changedir(
+                        new Array(p.length - 1 - indexfromcurrentpatharray)
+                        .fill('..')
+                        .join('/')
+                    )
+                )
+            )
+            .subscribe();
     }
 
     ngOnDestroy() {

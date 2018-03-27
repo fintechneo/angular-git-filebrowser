@@ -16,6 +16,7 @@ export class FileInfo {
 export abstract class FileBrowserService implements OnDestroy {
 
     fileList: BehaviorSubject<FileInfo[]> = new BehaviorSubject([]);
+    currentpath: BehaviorSubject<string[]> = new BehaviorSubject([]);
 
     abstract mount(dir: string): Observable<any>;
     abstract changedir(name: string): Observable<any>;

@@ -18,9 +18,11 @@
 <div style="display: flex; flex-direction: column; width: 100%; height: 100%">
     <div>
     <mat-toolbar style="width: 100%; display: flex;">
-        <h3>
-            Files
-        </h3>
+        <button mat-button (click)="goToParent(-1)">Files</button>            
+        <ng-container *ngFor="let dir of filebrowserservice.currentpath | async; let ndx=index">
+            <mat-icon>chevron_right</mat-icon>
+            <button mat-button (click)="goToParent(ndx)">{{dir}}</button>            
+        </ng-container>
         <span style="flex-grow: 1"></span>
         <button mat-icon-button (click)="createFolder()">
             <mat-icon>create_new_folder</mat-icon>

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import { FileBrowserService } from '../filebrowser.service';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FileInfo } from '../filebrowser.service';
-import { mergeMap, merge, map } from 'rxjs/operators';
+import { mergeMap, merge, map, tap } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 
@@ -65,7 +65,6 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     self.jsgitcommit = Module.cwrap('jsgitcommit', null, ['string', 'string', 'string', 'number', 'number']);
                     self.toGitPath = (filename) => {
                         const currentdir: string[] = FS.cwd().split('/');
-                        console.log(currentdir);
                         currentdir.splice(0, 3);
                         return currentdir.join('/') + '/' + filename;
                     };
@@ -152,7 +151,11 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     changedir(name: string): Observable<any> {
         return fromPromise(this.callWorker((params) => FS.chdir(params.name), {name: name})
             ).pipe(
-                mergeMap(() => this.readdir())
+                mergeMap(() => this.readdir()),
+                mergeMap(() => fromPromise(this.callWorker(() =>
+                    self.toGitPath('').split(/\//).filter(p => p.length > 0)
+                ))),
+                map((cwd) => this.currentpath.next(cwd))
             );
     }
 
