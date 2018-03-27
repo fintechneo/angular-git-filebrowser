@@ -152,7 +152,7 @@ export class GitBackendService extends FileBrowserService {
         return new Observable(observer => {
             this.callWorker((params) => {
                 FS.unlink(params.filename);
-                self.jsgitremove(self.toGitPath(params.filename));
+                console.log('Deleted local file', self.toGitPath(params.filename));
             }, {filename: filename})
                 .then(() => observer.next(true));
         }).pipe(
@@ -164,7 +164,17 @@ export class GitBackendService extends FileBrowserService {
     commitChanges(): Observable<any> {
         return fromPromise(this.callWorker((params) => {
             self.jsgitstatus();
-            if (self.jsgitworkdirnumberofdeltas() > 0 || self.jsgitstatusresult.length > 0) {
+
+            if (self.jsgitworkdirnumberofdeltas() > 0
+                || self.jsgitstatusresult.length > 0) {
+
+                self.jsgitstatusresult.forEach(p => {
+                    if (p.status === 'deleted') {
+                        self.jsgitremove(p.path);
+                    } else {
+                        self.jsgitadd(p.path);
+                    }
+                });
                 self.jsgitaddfileswithchanges();
                 self.jsgitcommit(
                     'Revision ' + new Date().toJSON(),
@@ -199,8 +209,7 @@ export class GitBackendService extends FileBrowserService {
                 FS.writeFile(params.name, new Uint8Array(xhr.response), {encoding: 'binary'});
 
                 const gitpath = self.toGitPath(params.name);
-                self.jsgitadd(gitpath);
-                console.log('Added file', gitpath);
+                console.log('Written file locally', gitpath);
             }, {url: URL.createObjectURL(file), name: file.name})
                 .then(() => {
                     observer.next(file.name);
