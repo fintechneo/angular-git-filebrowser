@@ -6,7 +6,8 @@ import { MatGridListModule, MatListModule,
         MatInputModule,
         MatProgressBarModule, MatSnackBarModule,
         MatDialogModule,
-        MatButtonModule} from '@angular/material';
+        MatButtonModule,
+        MatTooltipModule} from '@angular/material';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 export { FileBrowserService } from './filebrowser.service';
@@ -22,6 +23,7 @@ export { GitBackendService } from './gitbackend/gitbackend.service';
         MatToolbarModule,
         MatGridListModule,
         MatSnackBarModule,
+        MatTooltipModule,
         MatDialogModule,
         MatIconModule,
         MatProgressBarModule
