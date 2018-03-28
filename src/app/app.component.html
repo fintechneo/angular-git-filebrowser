@@ -1,12 +1,24 @@
-<div style="width: 800px; height: 400px; border: red solid 1px">
-    <app-filebrowser *ngIf="showfilebrowser"></app-filebrowser>
-</div>
-
-<label><input type="checkbox" [(ngModel)]="showfilebrowser"> Show filebrowser</label>
+<mat-card>
+    <mat-card-content>
+            
+        <mat-checkbox [(ngModel)]="showfilebrowser"> Show filebrowser</mat-checkbox>
+            
+        <mat-form-field style="width: 100%">
+            <input matInput [(ngModel)]="gitrepositoryurl" placeholder="Git repository URL"  />
+        </mat-form-field>
+    </mat-card-content>
+    <mat-card-actions>
+        <button mat-raised-button (click)="clone()">Clone</button>
+        <button mat-raised-button (click)="pull()">Pull remote changes</button>
+        <button mat-raised-button (click)="push()">Push local changes</button>
+    </mat-card-actions>
+</mat-card>
 <br />
-<h3>Git repository URL</h3>
-<input [(ngModel)]="gitrepositoryurl" style="width: 100%" />
-
-<button (click)="clone()">Clone</button>
-<button (click)="pull()">Pull remote changes</button>
-<button (click)="push()">Push local changes</button>
+<mat-card>
+    <mat-card-title>The filebrowser component</mat-card-title>
+    <mat-card-content>
+        <div style="height: 300px; border: red solid 1px">
+            <app-filebrowser *ngIf="showfilebrowser"></app-filebrowser>
+        </div>
+    </mat-card-content>
+</mat-card>
