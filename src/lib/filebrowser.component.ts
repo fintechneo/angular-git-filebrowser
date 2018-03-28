@@ -10,7 +10,7 @@ import { Observable } from 'rxjs/Observable';
 import { ActivatedRoute } from '@angular/router';
 import { mergeMap, map, take, bufferCount, filter } from 'rxjs/operators';
 import { from } from 'rxjs/observable/from';
-import { FileBrowserService } from './filebrowser.module';
+import { FileBrowserService } from './filebrowser.service';
 import { FileInfo } from './filebrowser.service';
 
 @Component({

@@ -10,6 +10,7 @@ import { MatGridListModule, MatListModule,
         MatTooltipModule} from '@angular/material';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SinglefolderviewComponent } from './singlefolderview/singlefolderview.component';
 export { FileBrowserService } from './filebrowser.service';
 export { GitBackendService } from './gitbackend/gitbackend.service';
 
@@ -29,10 +30,12 @@ export { GitBackendService } from './gitbackend/gitbackend.service';
         MatProgressBarModule
     ],
     declarations: [
-        FileBrowserComponent
+        FileBrowserComponent,
+        SinglefolderviewComponent
     ],
     exports: [
-        FileBrowserComponent
+        FileBrowserComponent,
+        SinglefolderviewComponent
     ]
 })
 export class FileBrowserModule {

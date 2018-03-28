@@ -25,6 +25,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     worker: Worker;
     syncInProgress = false;
     mountdir: string;
+    dirlisteners: {[dir: string]: Observable<FileInfo[]>} = {};
 
     constructor() {
         super();
@@ -273,6 +274,13 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             mergeMap(() => this.readdir()),
             mergeMap(() => this.syncLocalFS(false))
         );
+    }
+
+    listendir(dir: string): Observable<FileInfo[]> {
+        if (!this.dirlisteners[dir]) {
+
+        }
+        return this.dirlisteners[dir];
     }
 
     /**
