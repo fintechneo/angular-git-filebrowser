@@ -5,6 +5,7 @@ import { OnDestroy } from '@angular/core';
 
 export class FileInfo {
     name: string;
+    fullpath: string;
     mode: number;
     size: number;
     atime: string;
@@ -28,4 +29,18 @@ export abstract class FileBrowserService implements OnDestroy {
     abstract rename(oldpath: string, newpath: string): Observable<any>;
     abstract getDownloadObjectUrl(filename: string): Observable<string>;
     abstract ngOnDestroy(): void;
+
+    public openFile(file: FileInfo) {
+        this.getDownloadObjectUrl(file.fullpath ? file.fullpath : file.name)
+            .subscribe((url: string) => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+    }
 }

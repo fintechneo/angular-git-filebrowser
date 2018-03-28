@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import { FileBrowserService } from '../filebrowser.service';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FileInfo } from '../filebrowser.service';
-import { mergeMap, merge, map, tap } from 'rxjs/operators';
+import { mergeMap, merge, map, tap, take } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 
@@ -25,7 +25,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     worker: Worker;
     syncInProgress = false;
     mountdir: string;
-    dirlisteners: {[dir: string]: Observable<FileInfo[]>} = {};
+    dirlisteners: {[dir: string]: BehaviorSubject<FileInfo[]>} = {};
 
     constructor() {
         super();
@@ -36,6 +36,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             Observable.throw('Mount already called');
         }
 
+        this.mountdir = dir;
         // The "stupid" worker is simply evaluating scripts that we pass on to it
         this.worker = new Worker('assets/stupid_worker.js');
 
@@ -50,7 +51,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     FS.mkdir(params.workdir, '0777');
                     FS.mount(IDBFS, {}, '/' + params.workdir);
                     FS.chdir('/' + params.workdir);
-
+                    self.workdir = params.workdir;
                     self.jsgitinit = Module.cwrap('jsgitinit', null, []);
                     self.jsgitclone = Module.cwrap('jsgitclone', null, ['string', 'string']);
                     self.jsgitopenrepo = Module.cwrap('jsgitopenrepo', null, []);
@@ -69,7 +70,6 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         currentdir.splice(0, 3);
                         return currentdir.join('/') + '/' + filename;
                     };
-
                     self.jsgitinit();
 
                     resolve();
@@ -80,11 +80,16 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             mergeMap(() => this.syncLocalFS(true)),
             mergeMap(() => this.readdir()),
             mergeMap((ret) => {
-                const workdir = ret.find(file => file.name === 'workdir');
+                console.log(this.mountdir);
+                const workdir = ret.find(file => file.name === this.mountdir);
                 if (workdir) {
                     return this.changedir(workdir.name)
                         .pipe(
-                            mergeMap(() => fromPromise(this.callWorker(() => self.jsgitopenrepo()))),
+                            mergeMap(() => fromPromise(this.callWorker(() => {
+                                self.jsgitopenrepo();
+                                const gitroot = FS.cwd();
+                                self.fromGitPath = (path) => gitroot + '/' + path;
+                            }))),
                             mergeMap(() => this.readdir())
                         );
                 } else {
@@ -128,11 +133,12 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     }
 
     readdir(): Observable<FileInfo[]> {
-        return new Observable(observer => {
+        return new Observable<FileInfo[]>(observer => {
             this.callWorker(() => {
                     return FS.readdir('.')
                             .map(name => Object.assign({
-                                name: name
+                                name: name,
+                                fullpath: FS.cwd() + '/' + name
                             }, FS.stat(name))
                             )
                             .map(fileinfo =>
@@ -142,11 +148,14 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                             );
                 })
                 .then((ret: FileInfo[]) => {
-
                     this.fileList.next(ret);
                     observer.next(ret);
                 });
-            });
+            }
+        ).pipe(
+            tap(() => this.currentpath.pipe(take(1))
+                .subscribe(p => this.updateDirListener(p.join('/'))))
+        );
     }
 
     changedir(name: string): Observable<any> {
@@ -161,13 +170,12 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     }
 
     unlink(filename: string): Observable<any> {
-        return new Observable(observer => {
+        return fromPromise(
             this.callWorker((params) => {
                 FS.unlink(params.filename);
                 console.log('Deleted local file', self.toGitPath(params.filename));
             }, {filename: filename})
-                .then(() => observer.next(true));
-        }).pipe(
+        ).pipe(
             mergeMap(() => this.readdir()),
             mergeMap(() => this.syncLocalFS(false))
         );
@@ -278,9 +286,37 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     listendir(dir: string): Observable<FileInfo[]> {
         if (!this.dirlisteners[dir]) {
-
+            this.dirlisteners[dir] = new BehaviorSubject([]);
+            this.updateDirListener(dir);
         }
         return this.dirlisteners[dir];
+    }
+
+    updateDirListener(dir: string) {
+        if (!this.dirlisteners[dir]) {
+            return;
+        }
+
+        setTimeout(() =>
+            this.workerReady.subscribe(() => {
+                this.callWorker((params) =>
+                    FS.readdir(self.fromGitPath(params.dir)).map(name => Object.assign({
+                        name: name,
+                        fullpath: self.fromGitPath(`${params.dir}/${name}`)
+                        }, FS.stat(self.fromGitPath(`${params.dir}/${name}`)))
+                    )
+                    .map(fileinfo =>
+                        Object.assign(fileinfo,
+                            { isDir: FS.isDir(fileinfo.mode) }
+                        )
+                    ).filter(fileinfo => !fileinfo.isDir),
+                    {dir: dir}
+                ).then((files: FileInfo[]) => {
+                    console.log(files);
+                    this.dirlisteners[dir].next(files);
+                });
+            }),
+        0);
     }
 
     /**

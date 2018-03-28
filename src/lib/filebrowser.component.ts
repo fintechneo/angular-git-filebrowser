@@ -108,21 +108,6 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
         this.filebrowserservice.unlink(file.name).subscribe();
     }
 
-    public openFile(file: FileInfo) {
-        this.filebrowserservice
-            .getDownloadObjectUrl(file.name)
-            .subscribe((url: string) => {
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = file.name;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            });
-    }
-
     public uploadFiles(files: FileList) {
         const numfiles = files.length;
 
