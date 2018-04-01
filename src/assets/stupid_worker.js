@@ -2,11 +2,22 @@
 
 self.onmessage = (msg) => {  
     // Accept script from main thread      
-    const result = eval(msg.data);
+    
+    const func = new Function('params',
+            msg.data.func.substring(
+                msg.data.func.indexOf('{') + 1, 
+                msg.data.func.lastIndexOf('}')
+            )            
+        );
+    
+    const result = func(msg.data.params);
+    
     if(result && result.then) {
-        result.then((ret) => postMessage(ret));
+        result.then((ret) =>
+            postMessage({id: msg.data.id, response: ret})
+        );
     } else {
-        postMessage(result);
+        postMessage({id: msg.data.id, response: result});
     }
 };
 

@@ -25,6 +25,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     worker: Worker;
     syncInProgress = false;
     mountdir: string;
+    workermessageid = 1;
+    resolvemap: {[id: number]: Function} = {};
     dirlisteners: {[dir: string]: BehaviorSubject<FileInfo[]>} = {};
 
     constructor() {
@@ -39,6 +41,10 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         this.mountdir = dir;
         // The "stupid" worker is simply evaluating scripts that we pass on to it
         this.worker = new Worker('assets/stupid_worker.js');
+        this.worker.onmessage = (msg) => {
+            this.resolvemap[msg.data.id](msg.data.response);
+            delete this.resolvemap[msg.data.id];
+        };
 
         // Set up emscripten with libgit2 (inside worker)
         return fromPromise(this.callWorker((params) => {
@@ -65,6 +71,11 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     self.jsgitshutdown = Module.cwrap('jsgitshutdown', null, []);
                     self.jsgitprintlatestcommit = Module.cwrap('jsgitprintlatestcommit', null, []);
                     self.jsgitcommit = Module.cwrap('jsgitcommit', null, ['string', 'string', 'string', 'number', 'number']);
+                    self.fromGitPath = (path) => {
+                        const currentdir: string[] = FS.cwd().split('/');
+                        const gitroot = currentdir.slice(0, 3).join('/');
+                        return gitroot + '/' + path;
+                    };
                     self.toGitPath = (filename) => {
                         const currentdir: string[] = FS.cwd().split('/');
                         currentdir.splice(0, 3);
@@ -87,8 +98,6 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         .pipe(
                             mergeMap(() => fromPromise(this.callWorker(() => {
                                 self.jsgitopenrepo();
-                                const gitroot = FS.cwd();
-                                self.fromGitPath = (path) => gitroot + '/' + path;
                             }))),
                             mergeMap(() => this.readdir())
                         );
@@ -110,9 +119,13 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
      */
     callWorker(func, params?: any): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.worker.onmessage = (msg) => resolve(msg.data);
-            const workerMessage = '(' + func.toString() + ')(' + (params ? JSON.stringify(params) : '') + ')';
-            this.worker.postMessage(workerMessage);
+            const workermessageid = this.workermessageid++;
+            this.resolvemap[workermessageid] = (result) => resolve(result);
+            this.worker.postMessage({
+                func: func.toString(),
+                params: params,
+                id: workermessageid
+            });
         });
     }
 
@@ -128,7 +141,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         .then(() => observer.next());
                     })
                 ),
-                mergeMap(() => this.syncLocalFS(false))
+                mergeMap(() => this.syncLocalFS(false)),
+                tap(() => this.updateAllDirListeners())
             );
     }
 
@@ -280,7 +294,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             )
         ).pipe(
             mergeMap(() => this.readdir()),
-            mergeMap(() => this.syncLocalFS(false))
+            mergeMap(() => this.syncLocalFS(false)),
+            tap(() => this.updateAllDirListeners())
         );
     }
 
@@ -292,6 +307,10 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         return this.dirlisteners[dir];
     }
 
+    updateAllDirListeners() {
+        Object.keys(this.dirlisteners).forEach(dir => this.updateDirListener(dir));
+    }
+
     updateDirListener(dir: string) {
         if (!this.dirlisteners[dir]) {
             return;
@@ -299,20 +318,34 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
         setTimeout(() =>
             this.workerReady.subscribe(() => {
-                this.callWorker((params) =>
-                    FS.readdir(self.fromGitPath(params.dir)).map(name => Object.assign({
-                        name: name,
-                        fullpath: self.fromGitPath(`${params.dir}/${name}`)
-                        }, FS.stat(self.fromGitPath(`${params.dir}/${name}`)))
-                    )
-                    .map(fileinfo =>
-                        Object.assign(fileinfo,
-                            { isDir: FS.isDir(fileinfo.mode) }
-                        )
-                    ).filter(fileinfo => !fileinfo.isDir),
+                this.callWorker((params) => {
+                        const fulldirpath = self.fromGitPath(params.dir);
+                        let exists = false;
+                        try {
+                            FS.stat(fulldirpath);
+                            exists = true;
+                        } catch (e) {
+
+                        }
+                        if (exists) {
+                            console.log('update dir listener', fulldirpath, params.dir);
+                            return FS.readdir(fulldirpath).map(name => Object.assign({
+                                name: name,
+                                fullpath: self.fromGitPath(`${params.dir}/${name}`)
+                                }, FS.stat(self.fromGitPath(`${params.dir}/${name}`)))
+                            )
+                            .map(fileinfo =>
+                                Object.assign(fileinfo,
+                                    { isDir: FS.isDir(fileinfo.mode) }
+                                )
+                            ).filter(fileinfo => !fileinfo.isDir);
+                        } else {
+                            return [];
+                        }
+                    },
                     {dir: dir}
                 ).then((files: FileInfo[]) => {
-                    console.log(files);
+                    console.log(dir, files);
                     this.dirlisteners[dir].next(files);
                 });
             }),
