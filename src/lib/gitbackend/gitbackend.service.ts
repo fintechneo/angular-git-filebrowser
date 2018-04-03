@@ -54,10 +54,12 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 importScripts('libgit2.js');
                 Module['onRuntimeInitialized'] = () => {
 
-                    FS.mkdir(params.workdir, '0777');
-                    FS.mount(IDBFS, {}, '/' + params.workdir);
-                    FS.chdir('/' + params.workdir);
-                    self.workdir = params.workdir;
+                    self.workdir = '/' + params.workdir;
+
+                    FS.mkdir(self.workdir, '0777');
+                    FS.mount(IDBFS, {}, self.workdir);
+                    FS.chdir(self.workdir);
+
                     self.jsgitinit = Module.cwrap('jsgitinit', null, []);
                     self.jsgitclone = Module.cwrap('jsgitclone', null, ['string', 'string']);
                     self.jsgitopenrepo = Module.cwrap('jsgitopenrepo', null, []);
@@ -73,12 +75,11 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     self.jsgitcommit = Module.cwrap('jsgitcommit', null, ['string', 'string', 'string', 'number', 'number']);
                     self.fromGitPath = (path) => {
                         const currentdir: string[] = FS.cwd().split('/');
-                        const gitroot = currentdir.slice(0, 3).join('/');
+                        const gitroot = self.workdir;
                         return gitroot + '/' + path;
                     };
                     self.toGitPath = (filename) => {
-                        const currentdir: string[] = FS.cwd().split('/');
-                        currentdir.splice(0, 3);
+                        const currentdir: string[] = FS.cwd().substring(`${self.workdir}/`.length).split('/');
                         return currentdir.join('/') + '/' + filename;
                     };
                     self.jsgitinit();
@@ -135,8 +136,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 mergeMap(() =>
                     new Observable(observer => {
                     this.callWorker((params) => {
-                            self.jsgitclone(params.url, 'workdir');
-                            FS.chdir('workdir');
+                            self.jsgitclone(params.url, self.workdir);
+                            FS.chdir(self.workdir);
                         }, {url: url})
                         .then(() => observer.next());
                     })
