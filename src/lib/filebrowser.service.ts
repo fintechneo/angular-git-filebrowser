@@ -29,6 +29,8 @@ export abstract class FileBrowserService implements OnDestroy {
     abstract rename(oldpath: string, newpath: string): Observable<any>;
     abstract getDownloadObjectUrl(filename: string): Observable<string>;
     abstract ngOnDestroy(): void;
+    abstract getTextFileContents(filename: string): Observable<string>;
+    abstract saveTextFile(filename: string, content: string): Observable<any>;
 
     public openFile(file: FileInfo) {
         this.getDownloadObjectUrl(file.fullpath ? file.fullpath : file.name)

@@ -11,6 +11,8 @@ Click the `clone` button to clone the selected repository. Access to github is v
 
 A quick video demonstration of what you can expect to see is here: https://youtu.be/rcBluzpUWE4
 
+Here's another video demo showing editing and merging of file changes: https://youtu.be/xfGrMwLy_tw
+
 ## Creating a local git server for testing
 
 This is an example of using `git http-backend` as a target for CGI through a node http server. 

@@ -220,6 +220,22 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         );
     }
 
+    getTextFileContents(filename: string): Observable<string> {
+        return fromPromise(this.callWorker(params => {
+                return FS.readFile(params.filename, {encoding: 'utf8'});
+            }, {filename: filename}
+        ));
+    }
+
+    saveTextFile(filename: string, content: string): Observable<any> {
+        return fromPromise(this.callWorker(params => {
+                return FS.writeFile(params.filename, params.content);
+            }, {filename: filename, content: content}
+        )).pipe(
+            mergeMap(() => this.syncLocalFS(false))
+        );
+    }
+
     uploadFile(file: File): Observable<any> {
         return new Observable(observer => {
             this.callWorker((params) => {

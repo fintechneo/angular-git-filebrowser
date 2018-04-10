@@ -1,0 +1,13 @@
+<mat-dialog-content>
+    <mat-form-field style="width: 100%">
+        <textarea matInput [(ngModel)]="content" matTextareaAutosize></textarea>
+    </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <button mat-icon-button (click)="cancel()">
+        <mat-icon>cancel</mat-icon>
+    </button>
+    <button mat-icon-button (click)="save()">
+        <mat-icon>done</mat-icon>
+    </button>
+</mat-dialog-actions>

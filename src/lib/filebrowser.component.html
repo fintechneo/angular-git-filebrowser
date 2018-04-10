@@ -91,6 +91,9 @@
                     <mat-list-item *ngIf="!file.isDir">
                         <a mat-line (click)="filebrowserservice.openFile(file)">{{file.name}}</a>
                         <span class="visibleOnHover">
+                            <button mat-icon-button (click)="openTextEditor(file)">
+                                <mat-icon>edit</mat-icon>
+                            </button>
                             <button mat-icon-button (click)="deleteFile(file)">
                                 <mat-icon>delete</mat-icon>
                             </button>

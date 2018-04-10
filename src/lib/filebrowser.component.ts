@@ -12,6 +12,7 @@ import { mergeMap, map, take, bufferCount, filter } from 'rxjs/operators';
 import { from } from 'rxjs/observable/from';
 import { FileBrowserService } from './filebrowser.service';
 import { FileInfo } from './filebrowser.service';
+import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.component';
 
 @Component({
     selector: 'app-filebrowser',
@@ -158,6 +159,19 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
                 )
             )
             .subscribe();
+    }
+
+    openTextEditor(file: FileInfo) {
+        this.filebrowserservice.getTextFileContents(file.name)
+            .pipe(
+                mergeMap((contents) =>
+                    this.dialog.open(SimpleTextEditorDialogComponent,
+                        {data: {contents: contents}})
+                        .afterClosed()
+                ),
+                filter(res => res ? true : false),
+                mergeMap((res) => this.filebrowserservice.saveTextFile(file.name, res))
+            ).subscribe();
     }
 
     ngOnDestroy() {

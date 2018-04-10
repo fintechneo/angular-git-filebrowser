@@ -11,6 +11,7 @@ import { MatGridListModule, MatListModule,
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SinglefolderviewComponent } from './singlefolderview/singlefolderview.component';
+import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.component';
 export { FileBrowserService } from './filebrowser.service';
 export { GitBackendService } from './gitbackend/gitbackend.service';
 
@@ -31,12 +32,16 @@ export { GitBackendService } from './gitbackend/gitbackend.service';
     ],
     declarations: [
         FileBrowserComponent,
-        SinglefolderviewComponent
+        SinglefolderviewComponent,
+        SimpleTextEditorDialogComponent
     ],
     exports: [
         FileBrowserComponent,
         SinglefolderviewComponent
-    ]
+    ],
+     entryComponents: [
+        SimpleTextEditorDialogComponent
+     ]
 })
 export class FileBrowserModule {
 
