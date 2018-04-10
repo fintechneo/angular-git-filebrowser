@@ -60,19 +60,6 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     FS.mount(IDBFS, {}, self.workdir);
                     FS.chdir(self.workdir);
 
-                    self.jsgitinit = Module.cwrap('jsgitinit', null, []);
-                    self.jsgitclone = Module.cwrap('jsgitclone', null, ['string', 'string']);
-                    self.jsgitopenrepo = Module.cwrap('jsgitopenrepo', null, []);
-                    self.jsgitadd = Module.cwrap('jsgitadd', null, ['string']);
-                    self.jsgitremove = Module.cwrap('jsgitremove', null, ['string']);
-                    self.jsgitworkdirnumberofdeltas = Module.cwrap('jsgitworkdirnumberofdeltas', 'number', []);
-                    self.jsgitstatus = Module.cwrap('jsgitstatus', 'number', []);
-                    self.jsgitaddfileswithchanges = Module.cwrap('jsgitaddfileswithchanges', null, []);
-                    self.jsgitpush = Module.cwrap('jsgitpush', null, []);
-                    self.jsgitpull = Module.cwrap('jsgitpull', null, []);
-                    self.jsgitshutdown = Module.cwrap('jsgitshutdown', null, []);
-                    self.jsgitprintlatestcommit = Module.cwrap('jsgitprintlatestcommit', null, []);
-                    self.jsgitcommit = Module.cwrap('jsgitcommit', null, ['string', 'string', 'string', 'number', 'number']);
                     self.fromGitPath = (path) => {
                         const currentdir: string[] = FS.cwd().split('/');
                         const gitroot = self.workdir;
