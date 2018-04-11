@@ -79,16 +79,14 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             mergeMap(() => this.syncLocalFS(true)),
             mergeMap(() => this.readdir()),
             mergeMap((ret) => {
-                console.log(this.mountdir);
-                const workdir = ret.find(file => file.name === this.mountdir);
-                if (workdir) {
-                    return this.changedir(workdir.name)
-                        .pipe(
-                            mergeMap(() => fromPromise(this.callWorker(() => {
+                const hasGitRepo = ret.find(file => file.name === '.git');
+                if (hasGitRepo) {
+                    return fromPromise(
+                        this.callWorker(() => {
+                                console.log('Open repository');
                                 self.jsgitopenrepo();
-                            }))),
-                            mergeMap(() => this.readdir())
-                        );
+                            })
+                        ).pipe(mergeMap(() => of(ret)));
                 } else {
                     return of(ret);
                 }
