@@ -241,7 +241,9 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             } else {
                 console.log('No changes');
             }
-        }));
+        })).pipe(
+            mergeMap(() => this.syncLocalFS(false))
+        );
     }
 
     getDownloadObjectUrl(filename: string): Observable<string> {
