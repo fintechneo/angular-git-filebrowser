@@ -192,6 +192,13 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     if (p.status === 'deleted') {
                         self.jsgitremove(p.path);
                     } else {
+                        if ((p.path as string).endsWith('/')) {
+                            FS.readdir(self.fromGitPath(p.path))
+                                .filter((f: string) => f.charAt(0) !== '.')
+                                .forEach(f =>
+                                    self.jsgitadd(p.path + f)
+                            );
+                        }
                         self.jsgitadd(p.path);
                     }
                 });
