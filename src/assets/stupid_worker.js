@@ -10,14 +10,18 @@ self.onmessage = (msg) => {
             )            
         );
     
-    const result = func(msg.data.params);
-    
-    if(result && result.then) {
-        result.then((ret) =>
-            postMessage({id: msg.data.id, response: ret})
-        );
-    } else {
-        postMessage({id: msg.data.id, response: result});
+    try {
+        const result = func(msg.data.params);
+        
+        if(result && result.then) {
+            result.then((ret) =>
+                postMessage({id: msg.data.id, response: ret})
+            );
+        } else {
+            postMessage({id: msg.data.id, response: result});
+        }
+    } catch(e) {
+        postMessage({id: msg.data.id, response: null, error: JSON.stringify(e)});
     }
 };
 

@@ -1,6 +1,6 @@
 {
   "name": "angular-filebrowser",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "MIT",
   "scripts": {
     "ng": "ng",
@@ -10,7 +10,8 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "lib": "node ngmakelib-conf.js",
-    "libwatch": "node ngmakelib-conf.js --watch"
+    "libwatch": "node ngmakelib-conf.js --watch",
+    "publishlib": "cd .ngmakelibtmp/dist && npm publish"
   },
   "private": true,
   "dependencies": {

@@ -42,7 +42,11 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         // The "stupid" worker is simply evaluating scripts that we pass on to it
         this.worker = new Worker('assets/stupid_worker.js');
         this.worker.onmessage = (msg) => {
-            this.resolvemap[msg.data.id](msg.data.response);
+            if (msg.data.error) {
+                this.resolvemap[msg.data.id]({error: msg.data.error});
+            } else {
+                this.resolvemap[msg.data.id](msg.data.response);
+            }
             delete this.resolvemap[msg.data.id];
         };
 
@@ -106,7 +110,13 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     callWorker(func, params?: any): Promise<any> {
         return new Promise((resolve, reject) => {
             const workermessageid = this.workermessageid++;
-            this.resolvemap[workermessageid] = (result) => resolve(result);
+            this.resolvemap[workermessageid] = (result) => {
+                if (result && result.error) {
+                    reject(result.error);
+                } else {
+                    resolve(result);
+                }
+            };
             this.worker.postMessage({
                 func: func.toString(),
                 params: params,
@@ -118,7 +128,13 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     callWorker2(func, params?: any): Observable<any> {
         return new Observable((observer) => {
             const workermessageid = this.workermessageid++;
-            this.resolvemap[workermessageid] = (result) => observer.next(result);
+            this.resolvemap[workermessageid] = (result) => {
+                if (result && result.error) {
+                    observer.error(result.error);
+                } else {
+                    observer.next(result);
+                }
+            };
             this.worker.postMessage({
                 func: func.toString(),
                 params: params,
@@ -288,6 +304,11 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     rmdir(dirname: string): Observable<any> {
         return this.callWorker2((params) => {
+            const dirnameparts: string[] = params.dirname.split('/');
+            if (dirnameparts.length > 1) {
+                FS.chdir('/' + dirnameparts.slice(0, dirnameparts.length - 1).join('/'));
+                console.log('cwd', FS.cwd());
+            }
             const recursedir = (path) =>
                 FS.readdir(path)
                     .filter((f: string) => !f.startsWith('.'))
@@ -302,7 +323,9 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         }
                     });
             recursedir(params.dirname);
+
             FS.rmdir(params.dirname);
+            console.log('Removed directory', params.dirname);
         }, {dirname: dirname}).pipe(
             mergeMap(() => this.readdir()),
             mergeMap(() => this.syncLocalFS(false))
