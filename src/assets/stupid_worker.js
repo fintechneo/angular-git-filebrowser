@@ -3,7 +3,11 @@
 self.onmessage = (msg) => {  
     // Accept script from main thread      
     
-    const func = new Function('params',
+    const paramName = msg.data.func.substring(
+            msg.data.func.indexOf('(') + 1,
+            msg.data.func.indexOf(')')
+        ).trim();
+    const func = new Function(paramName,
             msg.data.func.substring(
                 msg.data.func.indexOf('{') + 1, 
                 msg.data.func.lastIndexOf('}')
