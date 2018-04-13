@@ -104,6 +104,9 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
         this.fileUploadInput.nativeElement.click();
     }
 
+    deleteDir(file: FileInfo) {
+        this.filebrowserservice.rmdir(file.name).subscribe();
+    }
 
     deleteFile(file: FileInfo) {
         this.filebrowserservice.unlink(file.name).subscribe();

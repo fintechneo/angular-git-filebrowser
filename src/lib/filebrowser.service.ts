@@ -24,6 +24,7 @@ export abstract class FileBrowserService implements OnDestroy {
     abstract changedir(name: string): Observable<any>;
     abstract uploadFile(file: File): Observable<any>;
     abstract readdir(): Observable<FileInfo[]>;
+    abstract rmdir(dirname: string): Observable<any>;
     abstract unlink(filename: string): Observable<any>;
     abstract mkdir(foldername: string): Observable<any>;
     abstract rename(oldpath: string, newpath: string): Observable<any>;

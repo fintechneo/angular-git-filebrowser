@@ -115,6 +115,18 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         });
     }
 
+    callWorker2(func, params?: any): Observable<any> {
+        return new Observable((observer) => {
+            const workermessageid = this.workermessageid++;
+            this.resolvemap[workermessageid] = (result) => observer.next(result);
+            this.worker.postMessage({
+                func: func.toString(),
+                params: params,
+                id: workermessageid
+            });
+        });
+    }
+
     clone(url: string): Observable<any> {
         return this.workerReady
             .pipe(
@@ -262,13 +274,36 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         );
     }
 
-    mkdir(foldername: string): Observable<any> {
+    mkdir(dirname: string): Observable<any> {
         return fromPromise(
             this.callWorker(params => {
-                    FS.mkdir(params.foldername);
-                }, {foldername: foldername}
+                    FS.mkdir(params.dirname);
+                }, {dirname: dirname}
             )
         ).pipe(
+            mergeMap(() => this.readdir()),
+            mergeMap(() => this.syncLocalFS(false))
+        );
+    }
+
+    rmdir(dirname: string): Observable<any> {
+        return this.callWorker2((params) => {
+            const recursedir = (path) =>
+                FS.readdir(path)
+                    .filter((f: string) => !f.startsWith('.'))
+                    .forEach((f: string) => {
+                        const deletepath = path + '/' + f;
+                        console.log('Deleting', deletepath);
+                        if (FS.isDir(FS.stat(deletepath).mode)) {
+                            recursedir(deletepath);
+                            FS.rmdir(deletepath);
+                        } else {
+                            FS.unlink(deletepath);
+                        }
+                    });
+            recursedir(params.dirname);
+            FS.rmdir(params.dirname);
+        }, {dirname: dirname}).pipe(
             mergeMap(() => this.readdir()),
             mergeMap(() => this.syncLocalFS(false))
         );
