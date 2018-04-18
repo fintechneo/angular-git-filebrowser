@@ -89,6 +89,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         this.callWorker(() => {
                                 console.log('Open repository');
                                 self.jsgitopenrepo();
+                                self.jsgitsetuser('test', 'test@example.com');
                             })
                         ).pipe(mergeMap(() => of(ret)));
                 } else {
@@ -151,6 +152,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     this.callWorker((params) => {
                             self.jsgitclone(params.url, self.workdir);
                             FS.chdir(self.workdir);
+                            self.jsgitsetuser('test', 'test@example.com');
                         }, {url: url})
                         .then(() => observer.next());
                     })
@@ -232,10 +234,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 });
                 self.jsgitaddfileswithchanges();
                 self.jsgitcommit(
-                    'Revision ' + new Date().toJSON(),
-                    'emscripten', 'fintechneo',
-                    new Date().getTime() / 1000,
-                    new Date().getTimezoneOffset()
+                    'Revision ' + new Date().toJSON()
                 );
                 console.log('Changes committed');
             } else {
@@ -426,6 +425,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
      * @param direction false = write, true = read
      */
     syncLocalFS(direction: boolean): Observable<any> {
+        console.log('synclocalfs called', direction, this.syncInProgress);
         if (this.syncInProgress) {
             return of(true);
         } else {
@@ -433,7 +433,10 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             return new Observable(observer => {
                 this.callWorker((params) =>
                     new Promise<any>((resolve, reject) =>
-                        FS.syncfs(params.direction, () => resolve())
+                        FS.syncfs(params.direction, () => {
+                            console.log(params.direction ? 'reload persisted' : 'persisted');
+                            resolve();
+                        })
                     ),
                     {direction: direction}
                 ).then(() => {

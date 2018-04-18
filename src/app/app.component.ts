@@ -39,7 +39,9 @@ export class AppComponent implements OnDestroy {
   }
 
   pull() {
-      this.gitbackendservice.pull().subscribe();
+    this.gitbackendservice.commitChanges()
+      .pipe(mergeMap(() => this.gitbackendservice.pull())).subscribe();
+
   }
 
   push() {
