@@ -17,7 +17,7 @@
     </style>
 <div style="display: flex; flex-direction: column; width: 100%; height: 100%">
     <div>
-    <mat-toolbar style="width: 100%; display: flex;">
+    <mat-toolbar style="width: 100%; display: flex;">        
         <button mat-button (click)="goToParent(-1)">Files</button>            
         <ng-container *ngFor="let dir of filebrowserservice.currentpath | async; let ndx=index">
             <mat-icon>chevron_right</mat-icon>
@@ -91,8 +91,10 @@
                         <mat-icon mat-list-icon *ngIf="file.isDir">arrow_back</mat-icon>
                     </a>
                     
-                    <mat-list-item *ngIf="!file.isDir">
-                        <a mat-line (click)="filebrowserservice.openFile(file)">{{file.name}}</a>
+                    <mat-list-item *ngIf="!file.isDir"
+                        [ngClass]="{'filewithmergeconflict': file.conflict}"
+                        >
+                        <a mat-line (click)="filebrowserservice.openFile(file)">{{file.name}}</a>                        
                         <span class="visibleOnHover">
                             <button mat-icon-button (click)="openTextEditor(file)">
                                 <mat-icon>edit</mat-icon>

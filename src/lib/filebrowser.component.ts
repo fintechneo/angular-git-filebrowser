@@ -16,7 +16,10 @@ import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.compon
 
 @Component({
     selector: 'app-filebrowser',
-    templateUrl: 'filebrowser.component.html'
+    templateUrl: 'filebrowser.component.html',
+    styleUrls: [
+        'filebrowser.component.css'
+    ]
 })
 export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
     dropText = 'Drop file here';

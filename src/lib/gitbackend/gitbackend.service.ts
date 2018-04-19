@@ -24,6 +24,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     worker: Worker;
     syncInProgress = false;
+    repositoryOpen = false;
     mountdir: string;
     workermessageid = 1;
     resolvemap: {[id: number]: Function} = {};
@@ -91,7 +92,10 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                                 self.jsgitopenrepo();
                                 self.jsgitsetuser('test', 'test@example.com');
                             })
-                        ).pipe(mergeMap(() => of(ret)));
+                        ).pipe(
+                            tap(() => this.repositoryOpen = true),
+                            mergeMap(() => this.readdir())
+                        );
                 } else {
                     return of(ret);
                 }
@@ -158,33 +162,44 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     })
                 ),
                 mergeMap(() => this.syncLocalFS(false)),
-                tap(() => this.updateAllDirListeners())
+                tap(() => this.repositoryOpen = true),
+                tap(() => this.updateAllDirListeners()),
             );
     }
 
     readdir(): Observable<FileInfo[]> {
-        return new Observable<FileInfo[]>(observer => {
-            this.callWorker(() => {
-                    return FS.readdir('.')
-                            .map(name => Object.assign({
-                                name: name,
-                                fullpath: FS.cwd() + '/' + name
-                            }, FS.stat(name))
+        return this.callWorker2(() =>
+                FS.readdir('.')
+                    .map(name => Object.assign({
+                        name: name,
+                        fullpath: FS.cwd() + '/' + name
+                    }, FS.stat(name))
+                    )
+                    .map(fileinfo =>
+                        Object.assign(fileinfo,
+                            { isDir: FS.isDir(fileinfo.mode) }
+                        )
+                    )
+            )
+            .pipe(
+                mergeMap((files: FileInfo[]) =>
+                    this.repositoryOpen ?
+                        this.listConflicts().pipe(
+                            map(cf => files.map(f =>
+                                Object.assign(f, {
+                                    conflict: cf.findIndex(c =>
+                                            f.fullpath.substring(('/' + this.mountdir + '/').length) === c) > -1
+                                }))
                             )
-                            .map(fileinfo =>
-                                Object.assign(fileinfo,
-                                    { isDir: FS.isDir(fileinfo.mode) }
-                                )
-                            );
-                })
-                .then((ret: FileInfo[]) => {
-                    this.fileList.next(ret);
-                    observer.next(ret);
-                });
-            }
-        ).pipe(
-            tap(() => this.currentpath.pipe(take(1))
-                .subscribe(p => this.updateDirListener(p.join('/'))))
+                        ) :
+                        of(files)
+                ),
+                tap((ret: FileInfo[]) =>
+                    this.fileList.next(ret)
+                ),
+                tap(() => this.currentpath.pipe(take(1))
+                    .subscribe(p => this.updateDirListener(p.join('/')))
+            )
         );
     }
 
@@ -209,6 +224,15 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             mergeMap(() => this.readdir()),
             mergeMap(() => this.syncLocalFS(false))
         );
+    }
+
+    listConflicts(): Observable<string[]> {
+        return this.callWorker2(() => {
+            self.jsgitstatus();
+            console.log('listconflicts:', self.jsgitstatusresult);
+            return self.jsgitstatusresult.filter(r => r.status === 'conflict')
+                .map(c => c.our);
+        });
     }
 
     commitChanges(): Observable<any> {

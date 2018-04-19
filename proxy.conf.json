@@ -3,5 +3,8 @@
       "target": "https://github.com",
       "secure": false,
       "changeOrigin": "true"
+  },
+  "/gitrepos": {
+    "target": "http://localhost:5000"
   }
 }
