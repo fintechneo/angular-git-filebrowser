@@ -215,10 +215,19 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         return fromPromise(this.callWorker((params) => {
             self.jsgitstatus();
 
-            if (self.jsgitworkdirnumberofdeltas() > 0
-                || self.jsgitstatusresult.length > 0) {
+            let noconflictstatusresults = self.jsgitstatusresult.filter(c => c.status !== 'conflict');
+            const conflictstatusresults = self.jsgitstatusresult.filter(c => c.status === 'conflict');
+            if (conflictstatusresults.length > 0) {
+                conflictstatusresults.forEach(c => self.jsgitadd(c.our));
+                self.jsgitresolvemergecommit();
+                self.jsgitstatus();
+                noconflictstatusresults = self.jsgitstatusresult.filter(c => c.status !== 'conflict');
+            }
 
-                self.jsgitstatusresult.forEach(p => {
+            if (self.jsgitworkdirnumberofdeltas() > 0
+                || noconflictstatusresults.length > 0) {
+
+                    noconflictstatusresults.forEach(p => {
                     if (p.status === 'deleted') {
                         self.jsgitremove(p.path);
                     } else {
