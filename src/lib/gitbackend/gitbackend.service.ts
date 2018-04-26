@@ -480,11 +480,17 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         }
     }
 
-    ngOnDestroy() {
+    unmount() {
         if (this.worker) {
             this.worker.terminate();
             this.worker = null;
             console.log('Git backend service terminated');
+            this.mountdir = null;
+            this.repositoryOpen = false;
         }
+    }
+
+    ngOnDestroy() {
+        this.unmount();
     }
 }

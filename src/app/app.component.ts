@@ -20,13 +20,14 @@ export class AppComponent implements OnDestroy {
   showfilebrowser = true;
   gitrepositoryurl = 'https://github.com/fintechneo/browsergittestdata.git';
 
+  workdir = 'workdir';
   gitbackendservice: GitBackendService;
 
   constructor(
     private filebrowserservice: FileBrowserService
   ) {
     this.gitbackendservice = this.filebrowserservice as GitBackendService;
-    this.gitbackendservice.mount('workdir').subscribe(() => console.log('Local file sys ready'));
+    this.gitbackendservice.mount(this.workdir).subscribe(() => console.log('Local file sys ready'));
   }
 
   clone() {
@@ -49,6 +50,10 @@ export class AppComponent implements OnDestroy {
       .pipe(mergeMap(() => this.gitbackendservice.push())).subscribe();
   }
 
+  remount() {
+    this.gitbackendservice.unmount();
+    this.gitbackendservice.mount(this.workdir).subscribe(() => console.log('Local file sys ready'));
+  }
   ngOnDestroy() {
     this.filebrowserservice.ngOnDestroy();
   }

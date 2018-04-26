@@ -4,14 +4,20 @@
             
         <mat-checkbox [(ngModel)]="showfilebrowser"> Show filebrowser</mat-checkbox>
             
-        <mat-form-field style="width: 100%">
-            <input matInput [(ngModel)]="gitrepositoryurl" placeholder="Git repository URL"  />
-        </mat-form-field>
+        <p>
+            <mat-form-field style="width: 100%">
+                <input matInput [(ngModel)]="workdir" placeholder="Local workdir" />
+            </mat-form-field>
+            <mat-form-field style="width: 100%">
+                <input matInput [(ngModel)]="gitrepositoryurl" placeholder="Git repository URL"  />
+            </mat-form-field>
+        </p>
     </mat-card-content>
     <mat-card-actions>
         <button mat-raised-button (click)="clone()">Clone</button>
         <button mat-raised-button (click)="pull()">Pull remote changes</button>
         <button mat-raised-button (click)="push()">Push local changes</button>
+        <button mat-raised-button (click)="remount()">Remount workdir</button>
     </mat-card-actions>
 </mat-card>
 <br />
