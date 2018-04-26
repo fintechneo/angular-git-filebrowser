@@ -1,6 +1,6 @@
 {
   "name": "angular-filebrowser",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "license": "MIT",
   "description": "Angular filebrowser backed by git repository in the browser",
   "homepage": "https://github.com/fintechneo/angular-git-filebrowser",
@@ -18,7 +18,7 @@
     "libwatch": "node ngmakelib-conf.js --watch",
     "publishlib": "cd .ngmakelibtmp/dist && npm publish"
   },
-  "private": true,
+  "private": false,
   "dependencies": {
     "@angular/animations": "^5.2.0",
     "@angular/cdk": "^5.2.4",
@@ -32,7 +32,7 @@
     "@angular/platform-browser-dynamic": "^5.2.0",
     "@angular/router": "^5.2.0",
     "core-js": "^2.4.1",
-    "ngmakelib": "^0.2.1",
+    "ngmakelib": "^0.2.4",
     "rxjs": "^5.5.6",
     "zone.js": "^0.8.19"
   },
