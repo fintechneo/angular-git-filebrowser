@@ -1,7 +1,12 @@
 {
   "name": "angular-filebrowser",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "license": "MIT",
+  "description": "Angular filebrowser backed by git repository in the browser",
+  "homepage": "https://github.com/fintechneo/angular-git-filebrowser",
+  "bugs": {
+    "url": "https://github.com/fintechneo/angular-git-filebrowser/issues"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve --aot --proxy-config proxy.conf.json",
