@@ -1,12 +1,12 @@
 # Offline web application storage using GIT in the browser
 
-Modern browsers have several mechanisms for storing data while disconnected from the network ( IndexedDB, localstorage etc ), and there are also serviceworkers that can provide access to a website when offline. But what about synchronizing changes made by the users of your web application while being disconnected for a while? What if one user make change in the top of a document while disconnected, and another user makes a change at the bottom of the same document. What should the document look like when both users come online? And how should that process be handled?
+Modern browsers have several mechanisms for storing data while disconnected from the network (IndexedDB, localstorage, etc), and there are also serviceworkers that can provide access to a website when offline. But what about synchronizing changes made by the users of your web application while being disconnected for a while? What if one user makes a change in the top of a document while disconnected, and another user makes a change at the bottom of the same document. What should the document look like when both users come online? And how should that process be handled?
 
 Programmers working in teams have bumped into similar questions, but the last few years most programmers have solved this by using a distributed version control system like GIT. We think this could be a solution also for web applications. If the user editable data is stored in a local GIT repository, we can use the powerful features of GIT to pull updates, merge local and remote changes, and push back locally modified data. And we'll also get versioning, so that we have a log of when data was changed and who did it.
 
 This project is exploring the possibilities of compiling the libgit2 library to WebAssembly and use it in the browser to turn it into a git client.
 
-See our efforts to compile libgit2 with emscripten ( for WebAssembly ) here: https://github.com/fintechneo/libgit2/tree/master/emscripten_hacks
+See our efforts to compile libgit2 with emscripten (for WebAssembly) here: https://github.com/fintechneo/libgit2/tree/master/emscripten_hacks
 
 And some video-demonstrations:
 
