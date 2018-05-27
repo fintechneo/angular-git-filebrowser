@@ -3,6 +3,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { mergeMap, map } from 'rxjs/operators';
 import { FileBrowserService } from '../lib/filebrowser.module';
 import { GitBackendService } from '../lib/gitbackend/gitbackend.service';
+import { HttpHeaders } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -27,7 +28,9 @@ export class AppComponent implements OnDestroy {
     private filebrowserservice: FileBrowserService
   ) {
     this.gitbackendservice = this.filebrowserservice as GitBackendService;
-    this.gitbackendservice.mount(this.workdir).subscribe(() => console.log('Local file sys ready'));
+    this.gitbackendservice.mount(this.workdir).subscribe(() => {
+      console.log('Local file sys ready');
+    });
   }
 
   clone() {

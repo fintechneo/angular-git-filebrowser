@@ -7,6 +7,7 @@ import { FileInfo } from '../filebrowser.service';
 import { mergeMap, merge, map, tap, take } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { fromPromise } from 'rxjs/observable/fromPromise';
+import { HttpHeaders } from '@angular/common/http';
 
 /*
  * These are used in the worker - but we declare them here so that typescript doesn't complain
@@ -488,6 +489,31 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             this.mountdir = null;
             this.repositoryOpen = false;
         }
+    }
+
+    /**
+     * jsgit doesn't read the host name and protocol from the url so need to set it from here
+     * @param host e.g. https://github.com
+     */
+    setHost(host: string) {
+        this.callWorker2((params) =>
+            Module.jsgithost = params.host,
+            {host: host}
+        ).subscribe();
+    }
+
+    /**
+     * Additional headers to send with http request, e.g. authorization tokens
+     * @param headers
+     */
+    setHeaders(headers: HttpHeaders) {
+        this.callWorker2((params) =>
+            Module.jsgitheaders = params.headers,
+            {
+                headers: headers.keys().map(key =>
+                    ({name: key, value: headers.get(key)}))
+            }
+        ).subscribe();
     }
 
     ngOnDestroy() {
