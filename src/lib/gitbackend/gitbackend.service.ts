@@ -91,7 +91,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         this.callWorker(() => {
                                 console.log('Open repository');
                                 self.jsgitopenrepo();
-                                self.jsgitsetuser('test', 'test@example.com');
+                                self.jsgitsetuser(self.gituserfullname, self.gituseremail);
                             })
                         ).pipe(
                             tap(() => this.repositoryOpen = true),
@@ -156,8 +156,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     new Observable(observer => {
                     this.callWorker((params) => {
                             self.jsgitclone(params.url, self.workdir);
-                            FS.chdir(self.workdir);
-                            self.jsgitsetuser('test', 'test@example.com');
+                        FS.chdir(self.workdir);
+                        self.jsgitsetuser(self.gituserfullname, self.gituseremail);
                         }, {url: url})
                         .then(() => observer.next());
                     })
@@ -499,6 +499,20 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         this.callWorker2((params) =>
             Module.jsgithost = params.host,
             {host: host}
+        ).subscribe();
+    }
+
+    /**
+     * Set name and email to be used for commit
+     * @param name
+     * @param email
+     */
+    setUser(name: string, email: string) {
+        this.callWorker2((params) => {
+                self.gituserfullname = params.name;
+                self.gituseremail = params.email;
+            },
+            {name: name, email: email}
         ).subscribe();
     }
 

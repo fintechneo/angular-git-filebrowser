@@ -24,12 +24,16 @@ export class AppComponent implements OnDestroy {
   workdir = 'workdir';
   gitbackendservice: GitBackendService;
 
+  fullname = 'Test Person';
+  email = 'test@example.com';
+
   constructor(
     private filebrowserservice: FileBrowserService
   ) {
     this.gitbackendservice = this.filebrowserservice as GitBackendService;
     this.gitbackendservice.mount(this.workdir).subscribe(() => {
       console.log('Local file sys ready');
+      this.gitbackendservice.setUser(this.fullname, this.email);
     });
   }
 
@@ -40,6 +44,10 @@ export class AppComponent implements OnDestroy {
       )
       .subscribe();
 
+  }
+
+  updateGitUser() {
+    this.gitbackendservice.setUser(this.fullname, this.email);
   }
 
   pull() {

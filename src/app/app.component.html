@@ -4,14 +4,23 @@
             
         <mat-checkbox [(ngModel)]="showfilebrowser"> Show filebrowser</mat-checkbox>
             
-        <p>
-            <mat-form-field style="width: 100%">
+        <div style="display: flex; flex-wrap: wrap; width: 100%">
+            <mat-form-field>
                 <input matInput [(ngModel)]="workdir" placeholder="Local workdir" />
             </mat-form-field>
-            <mat-form-field style="width: 100%">
+            <mat-form-field style="width: 500px">
                 <input matInput [(ngModel)]="gitrepositoryurl" placeholder="Git repository URL"  />
             </mat-form-field>
-        </p>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap;  width: 100%">
+            <mat-form-field>
+                <input matInput [(ngModel)]="fullname" placeholder="Full name" (change)="updateGitUser()"/>                
+            </mat-form-field>        
+            <mat-form-field>
+                <input matInput [(ngModel)]="email" placeholder="Email" (change)="updateGitUser()"/>                
+            </mat-form-field>
+        </div>
     </mat-card-content>
     <mat-card-actions>
         <button mat-raised-button (click)="clone()">Clone</button>
