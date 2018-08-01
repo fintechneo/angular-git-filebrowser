@@ -34,7 +34,11 @@
     <mat-card-title>The filebrowser component</mat-card-title>
     <mat-card-content>
         <div style="height: 300px; border: red solid 1px">
-            <app-filebrowser *ngIf="showfilebrowser" [fileInfoFilter]="hideFileIfStartingWithDotFilter"></app-filebrowser>
+            <app-filebrowser *ngIf="showfilebrowser" 
+                [fileInfoFilter]="hideFileIfStartingWithDotFilter"
+                [fileActionsHandler]="fileActionsHandler"
+                >
+            </app-filebrowser>
         </div>
     </mat-card-content>
 </mat-card>

@@ -13,6 +13,7 @@ import { from } from 'rxjs/observable/from';
 import { FileBrowserService } from './filebrowser.service';
 import { FileInfo } from './filebrowser.service';
 import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.component';
+import { FileActionsHandler } from './fileactionshandler.interface';
 
 @Component({
     selector: 'app-filebrowser',
@@ -25,6 +26,7 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
     dropText = 'Drop file here';
 
     @Input() fileInfoFilter: (fileInfo: FileInfo) => boolean;
+    @Input() fileActionsHandler: FileActionsHandler;
     @ViewChild('attachmentFileUploadInput') fileUploadInput: any;
 
     public showDropZone = false;
@@ -120,8 +122,16 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
         this.filebrowserservice.rmdir(file.name).subscribe();
     }
 
+    openFile(file: FileInfo) {
+        if (!this.fileActionsHandler || this.fileActionsHandler.openFile(file)) {
+            this.filebrowserservice.openFile(file);
+        }
+    }
+
     deleteFile(file: FileInfo) {
-        this.filebrowserservice.unlink(file.name).subscribe();
+        if (!this.fileActionsHandler || this.fileActionsHandler.deleteFile(file)) {
+            this.filebrowserservice.unlink(file.name).subscribe();
+        }
     }
 
     public uploadFiles(files: FileList) {
@@ -174,6 +184,12 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
                 )
             )
             .subscribe();
+    }
+
+    editFile(file: FileInfo) {
+        if (!this.fileActionsHandler || this.fileActionsHandler.editFile(file)) {
+            this.openTextEditor(file);
+        }
     }
 
     openTextEditor(file: FileInfo) {

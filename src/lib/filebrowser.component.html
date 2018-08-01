@@ -94,9 +94,9 @@
                     <mat-list-item *ngIf="!file.isDir"
                         [ngClass]="{'filewithmergeconflict': file.conflict}"
                         >
-                        <a mat-line (click)="filebrowserservice.openFile(file)">{{file.name}}</a>                        
+                        <a mat-line (click)="openFile(file)">{{file.name}}</a>                        
                         <span class="visibleOnHover">
-                            <button mat-icon-button (click)="openTextEditor(file)">
+                            <button mat-icon-button (click)="editFile(file)">
                                 <mat-icon>edit</mat-icon>
                             </button>
                             <button mat-icon-button (click)="deleteFile(file)">
