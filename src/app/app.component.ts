@@ -4,6 +4,7 @@ import { mergeMap, map } from 'rxjs/operators';
 import { FileBrowserService } from '../lib/filebrowser.module';
 import { GitBackendService } from '../lib/gitbackend/gitbackend.service';
 import { HttpHeaders } from '@angular/common/http';
+import { FileInfo } from '../lib/filebrowser.service';
 
 @Component({
   selector: 'app-root',
@@ -26,6 +27,10 @@ export class AppComponent implements OnDestroy {
 
   fullname = 'Test Person';
   email = 'test@example.com';
+
+  hideFileIfStartingWithDotFilter = (fileInfo: FileInfo): boolean => {
+    return fileInfo.name.indexOf('.') === 0 ? false : true;
+  }
 
   constructor(
     private filebrowserservice: FileBrowserService

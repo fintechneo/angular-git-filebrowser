@@ -50,7 +50,7 @@
     
     <div style="overflow-y: auto; flex-grow: 1" *ngIf="!showDropZone">
         <mat-nav-list>
-            <ng-container *ngFor="let file of filebrowserservice.fileList | async">
+            <ng-container *ngFor="let file of fileList | async">
                 <ng-container *ngIf="file===renameFile">
                     <mat-list-item>
                         <mat-icon mat-list-icon *ngIf="file.isDir">folder</mat-icon>

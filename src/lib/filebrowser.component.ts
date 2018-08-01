@@ -24,6 +24,7 @@ import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.compon
 export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
     dropText = 'Drop file here';
 
+    @Input() fileInfoFilter: (fileInfo: FileInfo) => boolean;
     @ViewChild('attachmentFileUploadInput') fileUploadInput: any;
 
     public showDropZone = false;
@@ -32,6 +33,7 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
 
     renameFile: FileInfo;
     newFileName: string;
+    fileList: Observable<FileInfo[]>;
 
     constructor(
         private renderer: Renderer2,
@@ -39,11 +41,18 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
         private dialog: MatDialog,
         public filebrowserservice: FileBrowserService
     ) {
-
+        this.fileList = filebrowserservice.fileList;
 
     }
 
     ngOnInit() {
+        if (this.fileInfoFilter) {
+            this.fileList = this.fileList.pipe(
+                map((fileList) =>
+                    fileList.filter(fileInfo => this.fileInfoFilter(fileInfo))
+                )
+            );
+        }
     }
 
     ngAfterViewInit() {
