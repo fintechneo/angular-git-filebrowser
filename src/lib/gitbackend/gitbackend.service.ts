@@ -8,6 +8,7 @@ import { mergeMap, merge, map, tap, take } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 import { HttpHeaders } from '@angular/common/http';
+import { ConflictPick, hasConflicts, getConflictVersion } from './resolveconflict';
 
 /*
  * These are used in the worker - but we declare them here so that typescript doesn't complain
@@ -286,6 +287,21 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 }, {filename: filename}
             )
         );
+    }
+
+    getTextFileContentsResolveConflicts(filename: string,  chosenConclictSide: ConflictPick): Observable<string> {
+        return this.getTextFileContents(filename)
+            .pipe(
+                mergeMap(contents => {
+                    if (hasConflicts(contents)) {
+                        const resolved = getConflictVersion(contents, chosenConclictSide);
+                        return this.saveTextFile(filename, resolved)
+                            .pipe(map(() => resolved));
+                    } else {
+                        return of(contents);
+                    }
+                })
+            );
     }
 
     getTextFileContents(filename: string): Observable<string> {
