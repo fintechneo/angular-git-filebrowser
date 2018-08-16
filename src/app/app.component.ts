@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 
 import { mergeMap, map } from 'rxjs/operators';
 import { FileBrowserService } from '../lib/filebrowser.module';
@@ -6,7 +6,7 @@ import { GitBackendService } from '../lib/gitbackend/gitbackend.service';
 import { HttpHeaders } from '@angular/common/http';
 import { FileInfo } from '../lib/filebrowser.service';
 import { FileActionsHandler } from '../lib/fileactionshandler.interface';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar, MatTableDataSource, MatPaginator } from '@angular/material';
 
 @Component({
   selector: 'app-root',
@@ -24,11 +24,15 @@ export class AppComponent implements OnDestroy {
   showfilebrowser = true;
   gitrepositoryurl = 'https://github.com/fintechneo/browsergittestdata.git';
 
+  displayedLogColumns = ['when', 'name', 'email', 'message', 'id', 'parents'];
   workdir = 'workdir';
   gitbackendservice: GitBackendService;
 
   fullname = 'Test Person';
   email = 'test@example.com';
+
+  log: MatTableDataSource<any>;
+  @ViewChild(MatPaginator) logPaginator: MatPaginator;
 
   fileActionsHandler = new class implements FileActionsHandler {
     snackbar: MatSnackBar;
@@ -64,6 +68,7 @@ export class AppComponent implements OnDestroy {
     this.gitbackendservice.mount(this.workdir).subscribe(() => {
       console.log('Local file sys ready');
       this.gitbackendservice.setUser(this.fullname, this.email);
+      this.refreshLog();
     });
   }
 
@@ -78,6 +83,13 @@ export class AppComponent implements OnDestroy {
 
   updateGitUser() {
     this.gitbackendservice.setUser(this.fullname, this.email);
+  }
+
+  refreshLog() {
+    (this.filebrowserservice as GitBackendService).history().subscribe(logdata => {
+        this.log = new MatTableDataSource(logdata);
+        this.log.paginator = this.logPaginator;
+    });
   }
 
   pull() {

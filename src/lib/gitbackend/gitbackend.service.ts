@@ -546,6 +546,13 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         ).subscribe();
     }
 
+    history(): Observable<any> {
+        return this.callWorker2(() => {
+            self.jsgithistory();
+            return self.jsgithistoryresult;
+        });
+    }
+
     ngOnDestroy() {
         this.unmount();
     }

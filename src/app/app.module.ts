@@ -4,7 +4,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppComponent } from './app.component';
 import { FileBrowserModule, FileBrowserService } from '../lib/filebrowser.module';
 import { FormsModule } from '@angular/forms';
-import { MatCheckboxModule, MatInputModule, MatButtonModule, MatCardModule } from '@angular/material';
+import { MatCheckboxModule, MatInputModule, MatButtonModule, MatCardModule, MatTableModule, MatPaginatorModule } from '@angular/material';
 
 @NgModule({
   declarations: [
@@ -17,6 +17,8 @@ import { MatCheckboxModule, MatInputModule, MatButtonModule, MatCardModule } fro
     MatCheckboxModule,
     MatCardModule,
     MatButtonModule,
+    MatTableModule,
+    MatPaginatorModule,
     FormsModule,
     FileBrowserModule
   ],
