@@ -15,6 +15,7 @@ import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.compon
 export { FileBrowserComponent } from './filebrowser.component';
 export { FileBrowserService, FileInfo } from './filebrowser.service';
 export { GitBackendService } from './gitbackend/gitbackend.service';
+export * from './gitbackend/resolveconflict';
 
 @NgModule({
     imports: [

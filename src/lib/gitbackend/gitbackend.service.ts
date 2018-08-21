@@ -237,17 +237,32 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         });
     }
 
+    quickResolveConflict(fileName, chooseConflictSide: ConflictPick): Observable<any> {
+        return this.getTextFileContentsResolveConflicts(fileName, chooseConflictSide)
+            .pipe(
+                mergeMap(resolvedContents =>
+                    this.saveTextFile(fileName, resolvedContents)
+                )
+            );
+    }
+
+    markConflictsResolved(): Observable<any> {
+        return this.callWorker2(() => {
+            const conflictstatusresults = self.jsgitstatusresult.filter(c => c.status === 'conflict');
+            conflictstatusresults.forEach(c => self.jsgitadd(c.our));
+            self.jsgitresolvemergecommit();
+        });
+    }
+
     commitChanges(): Observable<any> {
         return fromPromise(this.callWorker((params) => {
             self.jsgitstatus();
 
-            let noconflictstatusresults = self.jsgitstatusresult.filter(c => c.status !== 'conflict');
+            const noconflictstatusresults = self.jsgitstatusresult.filter(c => c.status !== 'conflict');
             const conflictstatusresults = self.jsgitstatusresult.filter(c => c.status === 'conflict');
             if (conflictstatusresults.length > 0) {
-                conflictstatusresults.forEach(c => self.jsgitadd(c.our));
-                self.jsgitresolvemergecommit();
-                self.jsgitstatus();
-                noconflictstatusresults = self.jsgitstatusresult.filter(c => c.status !== 'conflict');
+                console.log('Resolve conflicts before commiting changes.');
+                return;
             }
 
             if (self.jsgitworkdirnumberofdeltas() > 0
