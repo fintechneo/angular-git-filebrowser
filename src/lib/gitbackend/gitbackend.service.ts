@@ -237,6 +237,16 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         });
     }
 
+    listTextFileConflicts(): Observable<string[]> {
+        return this.callWorker2(() => {
+            self.jsgitstatus();
+            return self.jsgitstatusresult.filter(r =>
+                    r.status === 'conflict' &&
+                    r.binary === 0)
+                .map(c => c.our);
+        });
+    }
+
     quickResolveConflict(fileName, chooseConflictSide: ConflictPick): Observable<any> {
         return this.getTextFileContentsResolveConflicts(fileName, chooseConflictSide)
             .pipe(
