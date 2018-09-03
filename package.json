@@ -1,6 +1,6 @@
 {
   "name": "angular-filebrowser",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "license": "MIT",
   "description": "Angular filebrowser backed by git repository in the browser",
   "homepage": "https://github.com/fintechneo/angular-git-filebrowser",
