@@ -77,7 +77,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         return currentdir.join('/') + '/' + filename;
                     };
                     self.jsgitinit();
-                    self.jsgitstatus();
+
                     resolve();
                 };
             });
@@ -93,6 +93,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                                 console.log('Open repository');
                                 self.jsgitopenrepo();
                                 self.jsgitsetuser(self.gituserfullname, self.gituseremail);
+                                self.jsgitstatus();
                             })
                         ).pipe(
                             tap(() => this.repositoryOpen = true),
