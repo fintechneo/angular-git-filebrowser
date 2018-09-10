@@ -100,10 +100,10 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                             mergeMap(() => this.readdir())
                         );
                 } else {
-                    return of(ret);
+                    return of(null);
                 }
             }),
-            map(() => {
+            tap(() => {
                 this.workerReady.next(true);
                 this.workerReady.complete();
             })
@@ -158,8 +158,9 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     new Observable(observer => {
                     this.callWorker((params) => {
                             self.jsgitclone(params.url, self.workdir);
-                        FS.chdir(self.workdir);
-                        self.jsgitsetuser(self.gituserfullname, self.gituseremail);
+                            self.jsgitstatusresult = [];
+                            FS.chdir(self.workdir);
+                            self.jsgitsetuser(self.gituserfullname, self.gituseremail);
                         }, {url: url})
                         .then(() => observer.next());
                     })

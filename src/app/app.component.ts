@@ -65,10 +65,14 @@ export class AppComponent implements OnDestroy {
   ) {
     this.fileActionsHandler.snackbar = snackBar;
     this.gitbackendservice = this.filebrowserservice as GitBackendService;
-    this.gitbackendservice.mount(this.workdir).subscribe(() => {
-      console.log('Local file sys ready');
-      this.gitbackendservice.setUser(this.fullname, this.email);
-      this.refreshLog();
+    this.gitbackendservice.mount(this.workdir).subscribe((ret) => {
+      console.log('Local file sys ready', ret);
+      if (ret) {
+        this.gitbackendservice.setUser(this.fullname, this.email);
+        this.refreshLog();
+      } else {
+        console.log('No git repo - clone or initialize');
+      }
     });
   }
 
