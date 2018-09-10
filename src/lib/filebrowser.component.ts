@@ -2,18 +2,18 @@
  *  Copyright 2010-2018 FinTech Neo AS ( fintechneo.com )- All rights reserved
  */
 
-import { Input, ViewChild, Component, Renderer2, AfterViewInit, Inject, OnInit, HostListener, OnDestroy } from '@angular/core';
-import { Http, URLSearchParams } from '@angular/http';
+import { Input, ViewChild, Component, Renderer2, AfterViewInit,
+    OnInit, HostListener, OnDestroy, EventEmitter, Output } from '@angular/core';
 import { MatSnackBar, MatDialog } from '@angular/material';
 import { Observable } from 'rxjs/Observable';
 
-import { ActivatedRoute } from '@angular/router';
 import { mergeMap, map, take, bufferCount, filter } from 'rxjs/operators';
 import { from } from 'rxjs/observable/from';
 import { FileBrowserService } from './filebrowser.service';
 import { FileInfo } from './filebrowser.service';
 import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.component';
 import { FileActionsHandler } from './fileactionshandler.interface';
+import { FilesChangeEvent, FileChangeEventType } from './fileschangeevent.class';
 
 @Component({
     selector: 'app-filebrowser',
@@ -27,6 +27,7 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
 
     @Input() fileInfoFilter: (fileInfo: FileInfo) => boolean;
     @Input() fileActionsHandler: FileActionsHandler;
+    @Output() fileschanges = new EventEmitter<FilesChangeEvent>();
     @ViewChild('attachmentFileUploadInput') fileUploadInput: any;
 
     public showDropZone = false;
@@ -119,7 +120,9 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     deleteDir(file: FileInfo) {
-        this.filebrowserservice.rmdir(file.name).subscribe();
+        this.filebrowserservice.rmdir(file.name).subscribe(() =>
+            this.fileschanges.emit(new FilesChangeEvent(FileChangeEventType.RM_DIR, [file]))
+        );
     }
 
     openFile(file: FileInfo) {
@@ -130,7 +133,9 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
 
     deleteFile(file: FileInfo) {
         if (!this.fileActionsHandler || this.fileActionsHandler.deleteFile(file)) {
-            this.filebrowserservice.unlink(file.name).subscribe();
+            this.filebrowserservice.unlink(file.name).subscribe(() =>
+                this.fileschanges.emit(new FilesChangeEvent(FileChangeEventType.RM_FILE, [file]))
+            );
         }
     }
 
@@ -147,16 +152,30 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
             bufferCount(numfiles),
             mergeMap(() => this.filebrowserservice.readdir())
         )
-        .subscribe(() => console.log('Done uploading', numfiles));
+        .subscribe(() =>
+            this.fileschanges.emit(
+            new FilesChangeEvent(FileChangeEventType.SAVE_FILE,
+            Array.from(files)))
+        );
     }
 
     createFolder() {
-        this.filebrowserservice.mkdir('New folder').subscribe();
+        const foldername = 'New folder';
+        this.filebrowserservice.mkdir(foldername).subscribe(() =>
+            this.fileschanges.emit(
+                new FilesChangeEvent(FileChangeEventType.MK_DIR,
+                    foldername)
+            )
+        );
     }
 
     rename(file: FileInfo) {
         console.log('rename', this.newFileName);
         this.filebrowserservice.rename(file.name, this.newFileName).subscribe(() => {
+            this.fileschanges.emit(
+                new FilesChangeEvent(FileChangeEventType.RENAME,
+                    [file, this.newFileName])
+            );
             this.newFileName = null;
             this.renameFile = null;
         });

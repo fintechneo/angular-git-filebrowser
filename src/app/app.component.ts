@@ -7,6 +7,7 @@ import { HttpHeaders } from '@angular/common/http';
 import { FileInfo } from '../lib/filebrowser.service';
 import { FileActionsHandler } from '../lib/fileactionshandler.interface';
 import { MatSnackBar, MatTableDataSource, MatPaginator } from '@angular/material';
+import { FilesChangeEvent } from '../lib/fileschangeevent.class';
 
 @Component({
   selector: 'app-root',
@@ -100,6 +101,10 @@ export class AppComponent implements OnDestroy {
     this.gitbackendservice.commitChanges()
       .pipe(mergeMap(() => this.gitbackendservice.pull())).subscribe();
 
+  }
+
+  handleFilesChanges(event: FilesChangeEvent) {
+    console.log(event);
   }
 
   push() {

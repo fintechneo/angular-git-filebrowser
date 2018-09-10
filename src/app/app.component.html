@@ -37,6 +37,7 @@
             <app-filebrowser *ngIf="showfilebrowser" 
                 [fileInfoFilter]="hideFileIfStartingWithDotFilter"
                 [fileActionsHandler]="fileActionsHandler"
+                (fileschanges)="handleFilesChanges($event)"
                 >
             </app-filebrowser>
         </div>
