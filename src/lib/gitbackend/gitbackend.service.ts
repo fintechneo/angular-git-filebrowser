@@ -77,7 +77,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         return currentdir.join('/') + '/' + filename;
                     };
                     self.jsgitinit();
-
+                    self.jsgitstatus();
                     resolve();
                 };
             });
@@ -230,8 +230,6 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     listConflicts(): Observable<string[]> {
         return this.callWorker2(() => {
-            self.jsgitstatus();
-            console.log('listconflicts:', self.jsgitstatusresult);
             return self.jsgitstatusresult.filter(r => r.status === 'conflict')
                 .map(c => c.our);
         });
@@ -239,7 +237,6 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     listTextFileConflicts(): Observable<string[]> {
         return this.callWorker2(() => {
-            self.jsgitstatus();
             return self.jsgitstatusresult.filter(r =>
                     r.status === 'conflict' &&
                     r.binary === 0)
@@ -433,6 +430,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         return fromPromise(
             this.callWorker(() => {
                     self.jsgitpull();
+                    // Update status after pull
+                    self.jsgitstatus();
                 }, {}
             )
         ).pipe(
