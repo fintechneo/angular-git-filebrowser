@@ -33,6 +33,7 @@
 <mat-card>
     <mat-card-title>The filebrowser component</mat-card-title>
     <mat-card-content>
+        <mat-checkbox [(ngModel)]="gitbackendservice.convertUploadsToLFSPointer">Convert fileuploads to git LFS style pointers</mat-checkbox>
         <div style="height: 300px; border: red solid 1px">
             <app-filebrowser *ngIf="showfilebrowser" 
                 [fileInfoFilter]="hideFileIfStartingWithDotFilter"

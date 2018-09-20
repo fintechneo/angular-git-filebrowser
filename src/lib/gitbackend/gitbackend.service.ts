@@ -19,6 +19,24 @@ declare var FS;
 declare var IDBFS;
 declare var self;
 
+function hex(buffer) {
+    const hexCodes = [];
+    const view = new DataView(buffer);
+    for (let i = 0; i < view.byteLength; i += 4) {
+      // Using getUint32 reduces the number of iterations needed (we process 4 bytes each time)
+      const value = view.getUint32(i);
+      // toString(16) will give the hex representation of the number without padding
+      const stringValue = value.toString(16);
+      // We use concatenation and slice for padding
+      const padding = '00000000';
+      const paddedValue = (padding + stringValue).slice(-padding.length);
+      hexCodes.push(paddedValue);
+    }
+
+    // Join all the hex strings into one
+    return hexCodes.join('');
+}
+
 @Injectable()
 export class GitBackendService extends FileBrowserService implements OnDestroy {
 
@@ -31,6 +49,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     workermessageid = 1;
     resolvemap: {[id: number]: Function} = {};
     dirlisteners: {[dir: string]: BehaviorSubject<FileInfo[]>} = {};
+
+    convertUploadsToLFSPointer = false;
 
     constructor() {
         super();
@@ -345,24 +365,45 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     }
 
     uploadFile(file: File): Observable<any> {
-        return new Observable(observer => {
-            this.callWorker((params) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('GET', params.url, false);
-                xhr.responseType = 'arraybuffer';
-                xhr.send();
-                console.log(xhr.response);
-                FS.writeFile(params.name, new Uint8Array(xhr.response), {encoding: 'binary'});
+        if (this.convertUploadsToLFSPointer) {
+            return new Observable<string>(observer => {
+                const filereader = new FileReader();
+                filereader.readAsArrayBuffer(file);
 
-                const gitpath = self.toGitPath(params.name);
-                console.log('Written file locally', gitpath);
-            }, {url: URL.createObjectURL(file), name: file.name})
-                .then(() => {
-                    observer.next(file.name);
-                });
-        }).pipe(
-            mergeMap(() => this.syncLocalFS(false))
-        );
+                filereader.onload = async () => {
+                    const buf = new Uint8Array(filereader.result as ArrayBuffer);
+                    const hashbuf = await window.crypto.subtle.digest('SHA-256',
+                        buf
+                    );
+                    const lfsPointerText = `version https://git-lfs.github.com/spec/v1\n` +
+                                            `oid sha256:${hex(hashbuf)}\n` +
+                                            `size ${buf.length}`;
+
+                    observer.next(lfsPointerText);
+                };
+            }).pipe(
+                mergeMap((lfsPointerText) => this.saveTextFile(file.name, lfsPointerText))
+            );
+        } else {
+            return new Observable(observer => {
+                this.callWorker((params) => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('GET', params.url, false);
+                    xhr.responseType = 'arraybuffer';
+                    xhr.send();
+                    console.log(xhr.response);
+                    FS.writeFile(params.name, new Uint8Array(xhr.response), {encoding: 'binary'});
+
+                    const gitpath = self.toGitPath(params.name);
+                    console.log('Written file locally', gitpath);
+                }, {url: URL.createObjectURL(file), name: file.name})
+                    .then(() => {
+                        observer.next(file.name);
+                    });
+            }).pipe(
+                mergeMap(() => this.syncLocalFS(false))
+            );
+        }
     }
 
     mkdir(dirname: string): Observable<any> {
