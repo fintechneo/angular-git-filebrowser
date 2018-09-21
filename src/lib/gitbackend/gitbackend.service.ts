@@ -53,6 +53,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     convertUploadsToLFSPointer = false;
     gitLFSEndpoint = '/fintechneo/browsergittestdata.git/info';
+    gitLFSAuthorizationHeaderValue =  'Basic ' + btoa('username:password');
 
     constructor(
         private http: HttpClient
@@ -383,23 +384,28 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     uploadFile(file: File): Observable<any> {
         if (this.convertUploadsToLFSPointer) {
+            let filecontents: Uint8Array;
             return new Observable<string>(observer => {
                 const filereader = new FileReader();
                 filereader.readAsArrayBuffer(file);
 
                 filereader.onload = async () => {
-                    const buf = new Uint8Array(filereader.result as ArrayBuffer);
+                    filecontents = new Uint8Array(filereader.result as ArrayBuffer);
                     const hashbuf = await window.crypto.subtle.digest('SHA-256',
-                        buf
+                        filecontents
                     );
                     const lfsPointerText = `version https://git-lfs.github.com/spec/v1\n` +
                                             `oid sha256:${hex(hashbuf)}\n` +
-                                            `size ${buf.length}\n`;
+                                            `size ${filecontents.length}\n`;
 
                     observer.next(lfsPointerText);
                 };
             }).pipe(
-                mergeMap((lfsPointerText) => this.saveTextFile(file.name, lfsPointerText))
+                mergeMap((lfsPointerText) =>
+                    this.saveTextFile(file.name, lfsPointerText).pipe(
+                        mergeMap(() => this.uploadToLFSStorage(lfsPointerText, filecontents))
+                    )
+                ),
             );
         } else {
             return new Observable(observer => {
@@ -637,6 +643,60 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         });
     }
 
+    private uploadToLFSStorage(lfsPointer: string, contents: Uint8Array) {
+        const lfsPointerLines = lfsPointer.split('\n');
+        const sha256sum = lfsPointerLines[1].substring('oid sha256:'.length);
+        const size = parseInt(lfsPointerLines[2].substring('size '.length), 10);
+
+        return this.http
+            .post(this.gitLFSEndpoint + '/lfs/objects/batch',
+                {
+                    'operation': 'upload',
+                    'transfers': [ 'basic' ],
+                    // 'ref': { 'name': 'refs/heads/master' },
+                    'objects': [
+                        {
+                            'oid': sha256sum,
+                            'size': size,
+                        }
+                    ]
+                },
+                {
+                    headers: {
+                        'Authorization': this.gitLFSAuthorizationHeaderValue,
+                        'Accept': 'application/vnd.git-lfs+json',
+                        'Content-Type': 'application/vnd.git-lfs+json'
+                    }
+                }
+        ).pipe(
+            tap(ret => console.log(ret)),
+            mergeMap(
+                (ret: any) => {
+                    const uploadobj = ret.objects[0].actions.upload;
+                    const verifyobj = ret.objects[0].actions.verify;
+
+                    const headers = uploadobj.header;
+                    const verifyheaders = verifyobj.header;
+
+                    let url = uploadobj.href;
+                    let verifyurl = verifyobj.href;
+
+                    url = url.replace('https://github-cloud.s3.amazonaws.com', '');
+                    verifyurl = verifyurl.replace('https://lfs.github.com', '');
+
+                    return this.http.put(url, contents.buffer, {headers: headers})
+                        .pipe(
+                            mergeMap(() => this.http.post(verifyurl, {
+                                oid: sha256sum,
+                                size: size
+                            }, {headers: verifyheaders})
+                        )
+                    );
+                }
+            )
+        );
+    }
+
     getLFSDownloadURL(lfsPointer: string): Observable<string> {
         const lfsPointerLines = lfsPointer.split('\n');
         const sha256sum = lfsPointerLines[1].substring('oid sha256:'.length);
@@ -646,7 +706,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 {
                     'operation': 'download',
                     'transfers': [ 'basic' ],
-                    'ref': { 'name': 'refs/heads/master' },
+                    // 'ref': { 'name': 'refs/heads/master' },
                     'objects': [
                         {
                         'oid': sha256sum,
@@ -656,6 +716,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 },
                 {
                     headers: {
+                        'Authorization': this.gitLFSAuthorizationHeaderValue,
                         'Accept': 'application/vnd.git-lfs+json',
                         'Content-Type': 'application/vnd.git-lfs+json'
                     }

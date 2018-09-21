@@ -1,8 +1,18 @@
 {
+  "/fintechneo/browsergittestdata/objects/": {
+    "target": "https://lfs.github.com",
+    "secure": false,
+    "changeOrigin": "true"
+  },
   "/fintechneo": {
       "target": "https://github.com",
       "secure": false,
       "changeOrigin": "true"
+  },
+  "/alambic": {
+    "target": "https://github-cloud.s3.amazonaws.com",    
+    "secure": false,
+    "changeOrigin": "true"
   },
   "/gitrepos": {
     "target": "http://localhost:5000"
