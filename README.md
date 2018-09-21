@@ -27,6 +27,12 @@ navigate your browser to `http://localhost:4200`
 
 Click the `clone` button to clone the selected repository. Access to github is via a proxy that can be configured using `proxy.conf.json` (change to another organization then fintechneo if you want to test your own repositories).
 
+## Large files using git LFS
+
+If you want to upload binaries and large files, it might be a good idea to store contents of these outside the git repository, and instead only commit the pointers to the files in git. This filebrowser may be configured so that uploads will be converted to git LFS pointers, and the contents will be uploaded to an LFS server. A successful LFS commit from the browser can be seen here: https://github.com/fintechneo/browsergittestdata/commit/8e181f3f7800007c56db3150ea4594ce64c78bd8
+
+Read more about git LFS here: https://git-lfs.github.com/
+
 ## Creating a local git server for testing
 
 This is an example of using `git http-backend` as a target for CGI through a node http server. 
