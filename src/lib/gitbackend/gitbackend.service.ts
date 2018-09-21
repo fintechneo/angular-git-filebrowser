@@ -7,7 +7,7 @@ import { FileInfo } from '../filebrowser.service';
 import { mergeMap, merge, map, tap, take } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { fromPromise } from 'rxjs/observable/fromPromise';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { ConflictPick, hasConflicts, getConflictVersion } from './resolveconflict';
 
 /*
@@ -48,13 +48,15 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     mountdir: string;
     workermessageid = 1;
     resolvemap: {[id: number]: Function} = {};
-    getDownloadURLFromSHA256Hash: (string) => Observable<string> = null;
 
     dirlisteners: {[dir: string]: BehaviorSubject<FileInfo[]>} = {};
 
     convertUploadsToLFSPointer = false;
+    gitLFSEndpoint = '/fintechneo/browsergittestdata.git/info';
 
-    constructor() {
+    constructor(
+        private http: HttpClient
+    ) {
         super();
     }
 
@@ -340,13 +342,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         ).pipe(
             mergeMap((url: string) => {
                 if (url.indexOf('version ') === 0) {
-                    const sha256sum = url.split('\n')[1].substring('oid sha256:'.length);
-                    if (!this.getDownloadURLFromSHA256Hash) {
-                        console.log('You must pass a function for converting SHA256 sum to download url');
-                        return of('https://yourserver/' + sha256sum);
-                    } else {
-                        return this.getDownloadURLFromSHA256Hash(sha256sum);
-                    }
+                    return this.getLFSDownloadURL(url);
                 } else {
                     return of(url);
                 }
@@ -398,7 +394,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     );
                     const lfsPointerText = `version https://git-lfs.github.com/spec/v1\n` +
                                             `oid sha256:${hex(hashbuf)}\n` +
-                                            `size ${buf.length}`;
+                                            `size ${buf.length}\n`;
 
                     observer.next(lfsPointerText);
                 };
@@ -639,6 +635,34 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             self.jsgithistory();
             return self.jsgithistoryresult;
         });
+    }
+
+    getLFSDownloadURL(lfsPointer: string): Observable<string> {
+        const lfsPointerLines = lfsPointer.split('\n');
+        const sha256sum = lfsPointerLines[1].substring('oid sha256:'.length);
+        const size = parseInt(lfsPointerLines[2].substring('size '.length), 10);
+        return this.http
+            .post(this.gitLFSEndpoint + '/lfs/objects/batch',
+                {
+                    'operation': 'download',
+                    'transfers': [ 'basic' ],
+                    'ref': { 'name': 'refs/heads/master' },
+                    'objects': [
+                        {
+                        'oid': sha256sum,
+                        'size': size,
+                        }
+                    ]
+                },
+                {
+                    headers: {
+                        'Accept': 'application/vnd.git-lfs+json',
+                        'Content-Type': 'application/vnd.git-lfs+json'
+                    }
+                }
+        ).pipe(map(
+            (ret: any) => ret.objects[0].actions.download.href
+        ));
     }
 
     ngOnDestroy() {

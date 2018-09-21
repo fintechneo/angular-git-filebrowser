@@ -3,7 +3,7 @@ import { Component, OnDestroy, ViewChild } from '@angular/core';
 import { mergeMap, map } from 'rxjs/operators';
 import { FileBrowserService } from '../lib/filebrowser.module';
 import { GitBackendService } from '../lib/gitbackend/gitbackend.service';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { FileInfo } from '../lib/filebrowser.service';
 import { FileActionsHandler } from '../lib/fileactionshandler.interface';
 import { MatSnackBar, MatTableDataSource, MatPaginator } from '@angular/material';
@@ -16,8 +16,9 @@ import { FilesChangeEvent } from '../lib/fileschangeevent.class';
   providers: [
     {
       provide: FileBrowserService,
-      useClass: GitBackendService
-  }
+      useClass: GitBackendService,
+      deps: [HttpClient]
+    }
   ]
 })
 export class AppComponent implements OnDestroy {

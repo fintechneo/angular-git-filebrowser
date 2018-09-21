@@ -5,6 +5,7 @@ import { AppComponent } from './app.component';
 import { FileBrowserModule, FileBrowserService } from '../lib/filebrowser.module';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule, MatInputModule, MatButtonModule, MatCardModule, MatTableModule, MatPaginatorModule } from '@angular/material';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -19,6 +20,7 @@ import { MatCheckboxModule, MatInputModule, MatButtonModule, MatCardModule, MatT
     MatButtonModule,
     MatTableModule,
     MatPaginatorModule,
+    HttpClientModule,
     FormsModule,
     FileBrowserModule
   ],

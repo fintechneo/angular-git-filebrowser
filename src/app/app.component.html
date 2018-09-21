@@ -5,19 +5,22 @@
         <mat-checkbox [(ngModel)]="showfilebrowser"> Show filebrowser</mat-checkbox>
             
         <div style="display: flex; flex-wrap: wrap; width: 100%">
-            <mat-form-field>
+            <mat-form-field style="margin-right: 5px">
                 <input matInput [(ngModel)]="workdir" placeholder="Local workdir" />
             </mat-form-field>
-            <mat-form-field style="width: 500px">
+            <mat-form-field style="width: 300px; margin-right: 5px">
                 <input matInput [(ngModel)]="gitrepositoryurl" placeholder="Git repository URL"  />
+            </mat-form-field>
+            <mat-form-field style="width: 300px; margin-right: 5px">
+                <input matInput [(ngModel)]="gitbackendservice.gitLFSEndpoint" placeholder="Git LFS endpoint URL" />
             </mat-form-field>
         </div>
 
         <div style="display: flex; flex-wrap: wrap;  width: 100%">
-            <mat-form-field>
+            <mat-form-field style="margin-right: 5px">
                 <input matInput [(ngModel)]="fullname" placeholder="Full name" (change)="updateGitUser()"/>                
             </mat-form-field>        
-            <mat-form-field>
+            <mat-form-field style="margin-right: 5px">
                 <input matInput [(ngModel)]="email" placeholder="Email" (change)="updateGitUser()"/>                
             </mat-form-field>
         </div>
