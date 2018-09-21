@@ -48,6 +48,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     mountdir: string;
     workermessageid = 1;
     resolvemap: {[id: number]: Function} = {};
+    getDownloadURLFromSHA256Hash: (string) => Observable<string> = null;
+
     dirlisteners: {[dir: string]: BehaviorSubject<FileInfo[]>} = {};
 
     convertUploadsToLFSPointer = false;
@@ -325,11 +327,30 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     }
 
     getDownloadObjectUrl(filename: string): Observable<string> {
-        return fromPromise(
-            this.callWorker(params => {
-                    return URL.createObjectURL(new Blob([FS.readFile(params.filename)], { type: 'application/octet-stream' }));
-                }, {filename: filename}
-            )
+        return this.callWorker2(params => {
+                const contents: Uint8Array = FS.readFile(params.filename);
+                const lfsheader = `version https://git-lfs.github.com/spec/v1`;
+                const isLFSPointer = String.fromCharCode.apply(null, contents.subarray(0, lfsheader.length)) === lfsheader;
+                if (isLFSPointer) {
+                    return FS.readFile(params.filename, {encoding: 'utf8'});
+                } else {
+                    return URL.createObjectURL(new Blob([contents], { type: 'application/octet-stream' }));
+                }
+            }, {filename: filename}
+        ).pipe(
+            mergeMap((url: string) => {
+                if (url.indexOf('version ') === 0) {
+                    const sha256sum = url.split('\n')[1].substring('oid sha256:'.length);
+                    if (!this.getDownloadURLFromSHA256Hash) {
+                        console.log('You must pass a function for converting SHA256 sum to download url');
+                        return of('https://yourserver/' + sha256sum);
+                    } else {
+                        return this.getDownloadURLFromSHA256Hash(sha256sum);
+                    }
+                } else {
+                    return of(url);
+                }
+            })
         );
     }
 
