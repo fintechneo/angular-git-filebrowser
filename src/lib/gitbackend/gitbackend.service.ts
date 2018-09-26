@@ -9,6 +9,7 @@ import { of } from 'rxjs/observable/of';
 import { fromPromise } from 'rxjs/observable/fromPromise';
 import { HttpHeaders, HttpClient } from '@angular/common/http';
 import { ConflictPick, hasConflicts, getConflictVersion } from './resolveconflict';
+import { throwError } from 'rxjs';
 
 /*
  * These are used in the worker - but we declare them here so that typescript doesn't complain
@@ -63,7 +64,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
 
     mount(dir: string): Observable<any> {
         if (this.mountdir) {
-            Observable.throw('Mount already called');
+            throwError('Mount already called');
         }
 
         this.mountdir = dir;
@@ -406,6 +407,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                         mergeMap(() => this.uploadToLFSStorage(lfsPointerText, filecontents))
                     )
                 ),
+                tap(() => this.gitLFSTrack(file.name))
             );
         } else {
             return new Observable(observer => {
@@ -643,6 +645,40 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         });
     }
 
+    /**
+     * Similar to e.g.: git lfs track "*.psd"
+     *
+     *  Will update .gitattributes
+     * @param pattern
+     */
+    public gitLFSTrack(filenameorpattern: string) {
+        this.callWorker2((params) => {
+            console.log('gitLFStrac', params);
+            const pattern = params.pattern.replace(/\s/g, '[[:space:]]');
+            let hasPattern = false;
+            let gitattributeslines = [];
+            try {
+                gitattributeslines = FS.readFile('.gitattributes', {encoding: 'utf8'}).split('\n');
+            } catch (e) {}
+            const patternparts = pattern.split(/\./);
+            const extension = patternparts[patternparts.length - 1];
+            hasPattern = gitattributeslines.find(line => {
+                const linepattern = line.split(' ')[0];
+                const lineextension = linepattern.split('.')[1];
+
+                return line.indexOf('filter=lfs') > 0 &&
+                    line.indexOf(`${pattern} `) === 0 ||
+                    (line.charAt(0) === '*' && lineextension === extension);
+            }) ? true : false;
+
+            if (!hasPattern) {
+                gitattributeslines.push(`${pattern} filter=lfs diff=lfs merge=lfs -text`);
+                FS.writeFile('.gitattributes', gitattributeslines.join('\n'));
+            }
+            console.log(gitattributeslines);
+        }, {pattern: filenameorpattern}).subscribe();
+    }
+
     private uploadToLFSStorage(lfsPointer: string, contents: Uint8Array) {
         const lfsPointerLines = lfsPointer.split('\n');
         const sha256sum = lfsPointerLines[1].substring('oid sha256:'.length);
@@ -676,20 +712,19 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     const verifyobj = ret.objects[0].actions.verify;
 
                     const headers = uploadobj.header;
-                    const verifyheaders = verifyobj.header;
 
                     let url = uploadobj.href;
-                    let verifyurl = verifyobj.href;
 
                     url = url.replace('https://github-cloud.s3.amazonaws.com', '');
-                    verifyurl = verifyurl.replace('https://lfs.github.com', '');
 
                     return this.http.put(url, contents.buffer, {headers: headers})
                         .pipe(
-                            mergeMap(() => this.http.post(verifyurl, {
-                                oid: sha256sum,
-                                size: size
-                            }, {headers: verifyheaders})
+                            mergeMap(() => verifyobj ?
+                                this.http.post(verifyobj.href.replace('https://lfs.github.com', ''), {
+                                    oid: sha256sum,
+                                    size: size
+                            }, {headers: verifyobj.header})
+                            : of(true)
                         )
                     );
                 }
