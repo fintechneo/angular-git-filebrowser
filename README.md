@@ -54,3 +54,25 @@ First install the cgi package: `npm install cgi`
         }
     })).listen(5000);
 ```
+
+## Creating a proxy to github / bitbucket or other git hosting services with CORS restrictions
+
+If you are running this project in the development environment (using `npm start`), there's
+already a proxy to github for the repository at https://github.com/fintechneo/browsergittestdata, 
+which have been used for testing.
+
+If you are hosting this on a public webserver you may get issues with CORS restrictions, like if you try cloning from github you may see an error message
+about no `Access-Control-Allow-Origin` header present on the resources.
+
+By typing the script below into your terminal a simple proxy server to github.com will be started on 
+http://localhost:5000 - adding the headers to get around CORS restrictions.
+
+
+```
+echo 'var http=require("http");var https=require("https");function onRequest(request,response){var options={hostname:process.argv[2],port:443,path:request.url,method:request.method};var proxy=https.request(options,function(res){response.setHeader("Access-Control-Allow-Origin","*");response.setHeader("Access-Control-Allow-Headers","*");res.pipe(response,{end:true})});request.pipe(proxy,{end:true})}http.createServer(onRequest).listen(5e3);' | node - github.com
+```
+
+In order for libgit2 to use the proxy you must use call `setHost('http://localhost:5000')` on the GitBackendService. This again sets `Module.jsgithost` on the libgit2 library.
+
+So you should then clone from http://localhost:5000/fintechneo/angular-git-filebrowser.git and the
+requests will be forwarded to github.com
