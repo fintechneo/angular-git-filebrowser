@@ -709,6 +709,10 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             mergeMap(
                 (ret: any) => {
                     const uploadobj = ret.objects[0].actions.upload;
+                    if (!uploadobj && ret.objects[0].actions.download) {
+                        console.log('Already uploaded', sha256sum);
+                        return of(true);
+                    }
                     const verifyobj = ret.objects[0].actions.verify;
 
                     const headers = uploadobj.header;
