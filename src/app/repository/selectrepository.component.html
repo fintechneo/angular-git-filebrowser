@@ -1,0 +1,16 @@
+<mat-card>
+    <mat-card-content>
+                        
+        <div style="display: flex; flex-wrap: wrap; width: 100%">
+            <mat-form-field style="margin-right: 5px">
+                <input matInput [(ngModel)]="workdir" placeholder="Local workdir" />
+            </mat-form-field>
+            <mat-form-field style="width: 300px; margin-right: 5px">
+                <input matInput [(ngModel)]="gitrepositoryurl" placeholder="Git repository URL"  />
+            </mat-form-field>
+        </div>        
+    </mat-card-content>
+    <mat-card-actions>
+        <button mat-raised-button (click)="open()">Clone or open</button>
+    </mat-card-actions>
+</mat-card>

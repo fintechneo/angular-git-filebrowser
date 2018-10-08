@@ -6,6 +6,8 @@ import { FileBrowserModule, FileBrowserService } from '../lib/filebrowser.module
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule, MatInputModule, MatButtonModule, MatCardModule, MatTableModule, MatPaginatorModule } from '@angular/material';
 import { HttpClientModule } from '@angular/common/http';
+import { RouterModule } from '@angular/router';
+import { RepositoryModule } from './repository/repository.module';
 
 @NgModule({
   declarations: [
@@ -22,7 +24,9 @@ import { HttpClientModule } from '@angular/common/http';
     MatPaginatorModule,
     HttpClientModule,
     FormsModule,
-    FileBrowserModule
+    FileBrowserModule,
+    RepositoryModule,
+    RouterModule.forRoot([])
   ],
   bootstrap: [AppComponent]
 })
