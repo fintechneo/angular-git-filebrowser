@@ -12,6 +12,7 @@ import { LogComponent } from './log.component';
 import { FileBrowserModule } from '../../lib/filebrowser.module';
 import { LayoutHelperModule } from '../../lib/layout/layouthelper.module';
 import { SelectRepositoryComponent } from './selectrepository.component';
+import { SingleDirectoryViewComponent } from './singledirectoryview.component';
 
 @NgModule({
     imports: [
@@ -47,6 +48,10 @@ import { SelectRepositoryComponent } from './selectrepository.component';
                         component: LogComponent
                     },
                     {
+                        path: 'singledirectoryview',
+                        component: SingleDirectoryViewComponent
+                    },
+                    {
                         path: 'browse',
                         component: RepositoryBrowserComponent
                     }
@@ -55,6 +60,7 @@ import { SelectRepositoryComponent } from './selectrepository.component';
     ],
     declarations: [
         SelectRepositoryComponent,
+        SingleDirectoryViewComponent,
         RepositoryBrowserComponent,
         LogComponent,
         RepositoryComponent
