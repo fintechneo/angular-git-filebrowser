@@ -7,8 +7,8 @@ describe('angular-filebrowser App', () => {
     page = new AppPage();
   });
 
-  it('should display welcome message', () => {
+  it('should show the clone or open button on the first page', () => {
     page.navigateTo();
-    expect(page.getParagraphText()).toEqual('Angular filebrowser components');
+    expect(page.getCloneOrOpenButtonText()).toEqual('Clone or open');
   });
 });

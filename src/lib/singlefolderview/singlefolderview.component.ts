@@ -1,7 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { FileBrowserService } from '../filebrowser.module';
 import { Observable } from 'rxjs/Observable';
-import { FileInfo } from '../filebrowser.service';
+import { FileInfo, FileBrowserService } from '../filebrowser.service';
 
 @Component({
   selector: 'app-singlefolderview',

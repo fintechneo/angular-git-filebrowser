@@ -1,3 +1,5 @@
+[![Build Status](https://api.travis-ci.org/fintechneo/angular-git-filebrowser.svg?branch=master)](https://travis-ci.org/fintechneo/angular-git-filebrowser)
+
 # Offline web application storage using GIT in the browser
 
 Modern browsers have several mechanisms for storing data while disconnected from the network (IndexedDB, localstorage, etc), and there are also serviceworkers that can provide access to a website when offline. But what about synchronizing changes made by the users of your web application while being disconnected for a while? What if one user makes a change in the top of a document while disconnected, and another user makes a change at the bottom of the same document. What should the document look like when both users come online? And how should that process be handled?

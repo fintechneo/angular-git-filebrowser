@@ -53,6 +53,11 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
             this.fileList = this.fileList.pipe(
                 map((fileList) =>
                     fileList.filter(fileInfo => this.fileInfoFilter(fileInfo))
+                        .sort((a, b) =>
+                            ((a.isDir ? 'A' : 'B') + a.name).toLocaleLowerCase().localeCompare(
+                                    ((b.isDir ? 'A' : 'B') + b.name).toLocaleLowerCase()
+                                )
+                            )
                 )
             );
         }

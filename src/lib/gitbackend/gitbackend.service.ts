@@ -56,6 +56,11 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     gitLFSEndpoint = '/fintechneo/browsergittestdata.git/info';
     gitLFSAuthorizationHeaderValue =  'Basic ' + btoa('username:password');
 
+    /**
+     * Set to true to disable syncing filesystem with indexedDB
+     */
+    syncLocalFSDisabled = false;
+
     constructor(
         private http: HttpClient
     ) {
@@ -227,8 +232,11 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 tap((ret: FileInfo[]) =>
                     this.fileList.next(ret)
                 ),
-                tap(() => this.currentpath.pipe(take(1))
-                    .subscribe(p => this.updateDirListener(p.join('/')))
+                tap(() =>
+                    this.currentpath.pipe(
+                        take(1),
+                        tap(p => this.updateDirListener(p.join('/')))
+                    )
             )
         );
     }
@@ -568,6 +576,10 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
      */
     syncLocalFS(direction: boolean): Observable<any> {
         console.log('synclocalfs called', direction, this.syncInProgress);
+        if (this.syncLocalFSDisabled) {
+            console.log('synclocalfs is disabled');
+            return of(false);
+        }
         if (this.syncInProgress) {
             return of(true);
         } else {
