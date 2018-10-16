@@ -56,6 +56,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     gitLFSEndpoint = '/fintechneo/browsergittestdata.git/info';
     gitLFSAuthorizationHeaderValue =  'Basic ' + btoa('username:password');
 
+    currentStatus: BehaviorSubject<string> = new BehaviorSubject(null);
+
     /**
      * Set to true to disable syncing filesystem with indexedDB
      */
@@ -494,23 +496,22 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     }
 
     push() {
-        return fromPromise(
-            this.callWorker(() => {
+        this.currentStatus.next('Pushing local changes to server');
+        return this.callWorker2(() => {
                     self.jsgitpush();
                 }, {}
-            )
-        );
+            ).pipe(tap(() => this.currentStatus.next(null)));
     }
 
     pull() {
-        return fromPromise(
-            this.callWorker(() => {
+        this.currentStatus.next('Pulling recent changes from server');
+        return this.callWorker2(() => {
                     self.jsgitpull();
                     // Update status after pull
                     self.jsgitstatus();
                 }, {}
-            )
         ).pipe(
+            tap(() => this.currentStatus.next(null)),
             mergeMap(() => this.readdir()),
             mergeMap(() => this.syncLocalFS(false)),
             tap(() => this.updateAllDirListeners())
