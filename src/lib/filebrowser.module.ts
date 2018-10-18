@@ -12,6 +12,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SinglefolderviewComponent } from './singlefolderview/singlefolderview.component';
 import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.component';
+import { GitProgressSnackbarComponent } from './gitbackend/gitprogresssnackbar.component';
+export { GitProgressSnackbarComponent } from './gitbackend/gitprogresssnackbar.component';
 export { FileBrowserComponent } from './filebrowser.component';
 export { FileBrowserService, FileInfo } from './filebrowser.service';
 export { GitBackendService } from './gitbackend/gitbackend.service';
@@ -35,14 +37,16 @@ export * from './gitbackend/resolveconflict';
     declarations: [
         FileBrowserComponent,
         SinglefolderviewComponent,
-        SimpleTextEditorDialogComponent
+        SimpleTextEditorDialogComponent,
+        GitProgressSnackbarComponent
     ],
     exports: [
         FileBrowserComponent,
         SinglefolderviewComponent
     ],
      entryComponents: [
-        SimpleTextEditorDialogComponent
+        SimpleTextEditorDialogComponent,
+        GitProgressSnackbarComponent
      ]
 })
 export class FileBrowserModule {
