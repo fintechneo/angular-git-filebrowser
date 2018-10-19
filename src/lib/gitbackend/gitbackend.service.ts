@@ -56,6 +56,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     gitLFSEndpoint = '/fintechneo/browsergittestdata.git/info';
     gitLFSAuthorizationHeaderValue =  'Basic ' + btoa('username:password');
 
+    currentStatus: BehaviorSubject<string> = new BehaviorSubject(null);
+
     /**
      * Set to true to disable syncing filesystem with indexedDB
      */
@@ -72,16 +74,22 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             throwError('Mount already called');
         }
 
+        this.currentStatus.next('Mounting local filesystem');
+
         this.mountdir = dir;
         // The "stupid" worker is simply evaluating scripts that we pass on to it
         this.worker = new Worker('assets/stupid_worker.js');
         this.worker.onmessage = (msg) => {
-            if (msg.data.error) {
-                this.resolvemap[msg.data.id]({error: msg.data.error});
-            } else {
-                this.resolvemap[msg.data.id](msg.data.response);
+            if (msg.data.id) {
+                if (msg.data.error) {
+                    this.resolvemap[msg.data.id]({error: msg.data.error});
+                } else {
+                    this.resolvemap[msg.data.id](msg.data.response);
+                }
+                delete this.resolvemap[msg.data.id];
+            } else if (msg.data.progressmessage) {
+                this.currentStatus.next(msg.data.progressmessage);
             }
-            delete this.resolvemap[msg.data.id];
         };
 
         // Set up emscripten with libgit2 (inside worker)
@@ -106,6 +114,12 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     self.toGitPath = (filename) => {
                         const currentdir: string[] = FS.cwd().substring(`${self.workdir}/`.length).split('/');
                         return currentdir.join('/') + '/' + filename;
+                    };
+                    self.jsgitprogresscallback = (msg) => {
+                        console.log(msg);
+                        self.postMessage({
+                            progressmessage: msg
+                        });
                     };
                     self.jsgitinit();
 
@@ -137,6 +151,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             tap(() => {
                 this.workerReady.next(true);
                 this.workerReady.complete();
+                this.currentStatus.next(null);
             })
         );
     }
@@ -183,22 +198,21 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     }
 
     clone(url: string): Observable<any> {
+        this.currentStatus.next('Cloning remote repository');
         return this.workerReady
             .pipe(
                 mergeMap(() =>
-                    new Observable(observer => {
-                    this.callWorker((params) => {
+                    this.callWorker2((params) => {
                             self.jsgitclone(params.url, self.workdir);
                             self.jsgitstatusresult = [];
                             FS.chdir(self.workdir);
                             self.jsgitsetuser(self.gituserfullname, self.gituseremail);
                         }, {url: url})
-                        .then(() => observer.next());
-                    })
                 ),
                 mergeMap(() => this.syncLocalFS(false)),
                 tap(() => this.repositoryOpen = true),
                 tap(() => this.updateAllDirListeners()),
+                tap(() => this.currentStatus.next(null))
             );
     }
 
@@ -494,23 +508,22 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     }
 
     push() {
-        return fromPromise(
-            this.callWorker(() => {
+        this.currentStatus.next('Pushing local changes to server');
+        return this.callWorker2(() => {
                     self.jsgitpush();
                 }, {}
-            )
-        );
+            ).pipe(tap(() => this.currentStatus.next(null)));
     }
 
     pull() {
-        return fromPromise(
-            this.callWorker(() => {
+        this.currentStatus.next('Pulling recent changes from server');
+        return this.callWorker2(() => {
                     self.jsgitpull();
                     // Update status after pull
                     self.jsgitstatus();
                 }, {}
-            )
         ).pipe(
+            tap(() => this.currentStatus.next(null)),
             mergeMap(() => this.readdir()),
             mergeMap(() => this.syncLocalFS(false)),
             tap(() => this.updateAllDirListeners())
@@ -608,6 +621,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             console.log('Git backend service terminated');
             this.mountdir = null;
             this.repositoryOpen = false;
+            this.currentStatus.complete();
         }
     }
 

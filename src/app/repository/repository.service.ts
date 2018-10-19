@@ -1,12 +1,12 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { MatSnackBar } from '@angular/material';
+import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 import { Observable, AsyncSubject } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
 import { GitBackendService, FileBrowserService } from '../../lib/filebrowser.module';
-import { query } from '@angular/animations';
+import { GitProgressSnackbarComponent } from '../../lib/gitbackend/gitprogresssnackbar.component';
 
 @Injectable()
 export class RepositoryService implements OnDestroy {
@@ -25,6 +25,8 @@ export class RepositoryService implements OnDestroy {
     ) {
         this.gitbackendservice = this.filebrowserservice as GitBackendService;
         this.gitbackendservice.convertUploadsToLFSPointer = true;
+        GitProgressSnackbarComponent.activate(snackBar, this.gitbackendservice);
+
         this.route.params.pipe(
             tap(params => this.workdir = params.repository),
             mergeMap(params => this.gitbackendservice.mount(params.repository)),
