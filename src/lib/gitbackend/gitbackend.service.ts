@@ -621,7 +621,6 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             console.log('Git backend service terminated');
             this.mountdir = null;
             this.repositoryOpen = false;
-            this.currentStatus.complete();
         }
     }
 
