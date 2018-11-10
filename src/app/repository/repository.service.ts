@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpHeaders } from '@angular/common/http';
 
 import { Observable, AsyncSubject } from 'rxjs';
 import { mergeMap, tap } from 'rxjs/operators';
@@ -22,24 +22,30 @@ export class RepositoryService implements OnDestroy {
         private filebrowserservice: FileBrowserService,
         public snackBar: MatSnackBar,
         public route: ActivatedRoute,
-        private credentialsService: CredientialsService,
-        private http: HttpClient
+        credentialsService: CredientialsService
     ) {
+        credentialsService.storeCredentialsInSessionStorage();
         this.gitbackendservice = this.filebrowserservice as GitBackendService;
         this.gitbackendservice.convertUploadsToLFSPointer = true;
         const basicAuthHeader = 'Basic ' + btoa(`${credentialsService.username}:${credentialsService.password}`);
+        this.gitbackendservice.proxyHost = credentialsService.proxyhost;
         this.gitbackendservice.gitLFSAuthorizationHeaderValue = basicAuthHeader;
-        this.gitbackendservice.setHeaders(
-            new HttpHeaders(
-                {'Authorization': basicAuthHeader
-            }
-        ));
+
         GitProgressSnackbarComponent.activate(snackBar, this.gitbackendservice);
 
         this.route.params.pipe(
             tap(params => this.workdir = params.repository),
             mergeMap(params => this.gitbackendservice.mount(params.repository)),
             mergeMap(isGitRepo => {
+                this.gitbackendservice.setHeaders(
+                    new HttpHeaders(
+                        {'Authorization': basicAuthHeader
+                    }
+                ));
+                this.gitbackendservice.setUser(
+                    credentialsService.gitname, credentialsService.gitemail
+                );
+
                 if (isGitRepo) {
                     return this.synchronizeChanges();
                 } else {

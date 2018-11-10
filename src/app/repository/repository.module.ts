@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { MatSidenavModule, MatListModule,
     MatInputModule, MatCardModule, MatToolbarModule,
-        MatIconModule, MatButtonModule, MatPaginatorModule, MatTableModule } from '@angular/material';
+        MatIconModule, MatButtonModule, MatPaginatorModule, MatTableModule, MatCheckboxModule } from '@angular/material';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,6 +25,7 @@ import { CredientialsService } from './credentials.service';
         MatIconModule,
         MatInputModule,
         MatListModule,
+        MatCheckboxModule,
         MatTableModule,
         MatPaginatorModule,
         MatToolbarModule,

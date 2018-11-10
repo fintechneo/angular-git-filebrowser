@@ -69,6 +69,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     gitLFSEndpoint = '/fintechneo/browsergittestdata.git/info';
     gitLFSAuthorizationHeaderValue =  'Basic ' + btoa('username:password');
 
+    proxyHost: string;
+
     currentStatus: BehaviorSubject<string> = new BehaviorSubject(null);
 
     /**
@@ -385,6 +387,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     return this.getLFSDownloadURL(url)
                         .pipe(
                             mergeMap((downloadurl: string) => {
+                                downloadurl = this.replaceWithProxyHost(downloadurl);
                                 const req = new HttpRequest(
                                     'GET',
                                     downloadurl,
@@ -717,6 +720,14 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         });
     }
 
+    replaceWithProxyHost(url) {
+        if (this.proxyHost) {
+            url = url.substring('https://'.length);
+            url = this.proxyHost + url.substring(url.indexOf('/'));
+        }
+        return url;
+    }
+
     /**
      * Similar to e.g.: git lfs track "*.psd"
      *
@@ -780,18 +791,18 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             tap(ret => console.log(ret)),
             mergeMap(
                 (ret: any) => {
-                    const uploadobj = ret.objects[0].actions.upload;
-                    if (!uploadobj && ret.objects[0].actions.download) {
+                    if (!ret.objects[0].actions || ret.objects[0].actions.download) {
                         console.log('Already uploaded', sha256sum);
                         return of(true);
                     }
+                    const uploadobj = ret.objects[0].actions.upload;
                     const verifyobj = ret.objects[0].actions.verify;
 
                     const headers = new HttpHeaders(uploadobj.header);
 
                     let url = uploadobj.href;
 
-                    url = url.replace('https://github-cloud.s3.amazonaws.com', '');
+                    url = this.replaceWithProxyHost(url);
 
                     return this.http.request(
                             new HttpRequest<any>('PUT', url, contents, {headers: headers, reportProgress: true})
@@ -808,7 +819,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                             }),
                             last(),
                             mergeMap(() => verifyobj ?
-                                this.http.post(verifyobj.href.replace('https://lfs.github.com', ''), {
+                                this.http.post(
+                                    this.replaceWithProxyHost(verifyobj.href), {
                                     oid: sha256sum,
                                     size: size
                             }, {headers: verifyobj.header})
