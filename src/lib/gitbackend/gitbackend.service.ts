@@ -379,6 +379,9 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         ).pipe(
             mergeMap((url: string) => {
                 if (url.indexOf('version ') === 0) {
+                    const lfsPointerLines = url.split('\n');
+                    const filesize = parseInt(lfsPointerLines[2].substring('size '.length), 10);
+
                     return this.getLFSDownloadURL(url)
                         .pipe(
                             mergeMap((downloadurl: string) => {
@@ -391,7 +394,10 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                                     .pipe(
                                         map((event: HttpEvent<any>) => {
                                             if (event.type === HttpEventType.DownloadProgress) {
-                                                this.currentStatus.next(`Downloading ${formatBytes(event.loaded)}`);
+                                                const percentDone = Math.round(100 * event.loaded / filesize);
+                                                this.currentStatus.next(
+                                                    `Downloading ${formatBytes(event.loaded, 2)} ( ${percentDone} %)`
+                                                );
                                             } else if (event.type === HttpEventType.Response) {
                                                 return event.body;
                                             }
@@ -794,7 +800,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                             tap((event: HttpEvent<any>) => {
                                 if (event.type === HttpEventType.UploadProgress) {
                                     const percentDone = Math.round(100 * event.loaded / event.total);
-                                    this.currentStatus.next(`Uploading ${formatBytes(event.loaded)} ( ${percentDone} % )`);
+                                    this.currentStatus.next(`Uploading ${formatBytes(event.loaded, 2)} ( ${percentDone} % )`);
                                 } else if (event.type === HttpEventType.Response) {
                                     return event.body;
                                 }

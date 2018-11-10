@@ -13,6 +13,7 @@ import { FileBrowserModule } from '../../lib/filebrowser.module';
 import { LayoutHelperModule } from '../../lib/layout/layouthelper.module';
 import { SelectRepositoryComponent } from './selectrepository.component';
 import { SingleDirectoryViewComponent } from './singledirectoryview.component';
+import { CredientialsService } from './credentials.service';
 
 @NgModule({
     imports: [
@@ -64,6 +65,9 @@ import { SingleDirectoryViewComponent } from './singledirectoryview.component';
         RepositoryBrowserComponent,
         LogComponent,
         RepositoryComponent
+    ],
+    providers: [
+        CredientialsService
     ]
 })
 export class RepositoryModule {
