@@ -4,10 +4,10 @@ import { Observable } from 'rxjs/Observable';
 import { FileBrowserService } from '../filebrowser.service';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FileInfo } from '../filebrowser.service';
-import { mergeMap, merge, map, tap, take } from 'rxjs/operators';
+import { mergeMap, map, tap, take, last } from 'rxjs/operators';
 import { of } from 'rxjs/observable/of';
 import { fromPromise } from 'rxjs/observable/fromPromise';
-import { HttpHeaders, HttpClient } from '@angular/common/http';
+import { HttpHeaders, HttpClient, HttpEventType, HttpEvent, HttpRequest } from '@angular/common/http';
 import { ConflictPick, hasConflicts, getConflictVersion } from './resolveconflict';
 import { throwError } from 'rxjs';
 
@@ -36,6 +36,19 @@ function hex(buffer) {
 
     // Join all the hex strings into one
     return hexCodes.join('');
+}
+
+function formatBytes(a, b?): string {
+    if (0 === a) {
+        return '0 B';
+    }
+
+    const c = 1e3,
+        d = b || 0,
+        e = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+        f = Math.floor(Math.log(a) / Math.log(c));
+
+    return parseFloat((a / Math.pow(c, f)).toFixed(d)) + ' ' + e[f];
 }
 
 @Injectable()
@@ -366,7 +379,32 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         ).pipe(
             mergeMap((url: string) => {
                 if (url.indexOf('version ') === 0) {
-                    return this.getLFSDownloadURL(url);
+                    return this.getLFSDownloadURL(url)
+                        .pipe(
+                            mergeMap((downloadurl: string) => {
+                                const req = new HttpRequest(
+                                    'GET',
+                                    downloadurl,
+                                    { responseType: 'blob', reportProgress: true }
+                                );
+                                return this.http.request(req)
+                                    .pipe(
+                                        map((event: HttpEvent<any>) => {
+                                            if (event.type === HttpEventType.DownloadProgress) {
+                                                this.currentStatus.next(`Downloading ${formatBytes(event.loaded)}`);
+                                            } else if (event.type === HttpEventType.Response) {
+                                                return event.body;
+                                            }
+                                            return event;
+                                        }),
+                                        last(),
+                                        map(blob =>
+                                            URL.createObjectURL(blob)
+                                        ),
+                                        tap(() => this.currentStatus.next(null))
+                                );
+                            })
+                        );
                 } else {
                     return of(url);
                 }
@@ -409,6 +447,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         if (this.convertUploadsToLFSPointer) {
             let filecontents: Uint8Array;
             return new Observable<string>(observer => {
+                this.currentStatus.next('Calculating checksum for ' + file.name);
                 const filereader = new FileReader();
                 filereader.readAsArrayBuffer(file);
 
@@ -421,15 +460,17 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                                             `oid sha256:${hex(hashbuf)}\n` +
                                             `size ${filecontents.length}\n`;
 
+                    this.currentStatus.next(`Uploading ${file.name} to LFS storage`);
                     observer.next(lfsPointerText);
                 };
             }).pipe(
                 mergeMap((lfsPointerText) =>
-                    this.saveTextFile(file.name, lfsPointerText).pipe(
-                        mergeMap(() => this.uploadToLFSStorage(lfsPointerText, filecontents))
+                    this.uploadToLFSStorage(lfsPointerText, file).pipe(
+                        mergeMap(() => this.saveTextFile(file.name, lfsPointerText))
                     )
                 ),
-                tap(() => this.gitLFSTrack(file.name))
+                tap(() => this.gitLFSTrack(file.name)),
+                tap(() => this.currentStatus.next(null))
             );
         } else {
             return new Observable(observer => {
@@ -704,7 +745,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         }, {pattern: filenameorpattern}).subscribe();
     }
 
-    private uploadToLFSStorage(lfsPointer: string, contents: Uint8Array) {
+    private uploadToLFSStorage(lfsPointer: string, contents: Blob): Observable<any> {
         const lfsPointerLines = lfsPointer.split('\n');
         const sha256sum = lfsPointerLines[1].substring('oid sha256:'.length);
         const size = parseInt(lfsPointerLines[2].substring('size '.length), 10);
@@ -740,14 +781,26 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     }
                     const verifyobj = ret.objects[0].actions.verify;
 
-                    const headers = uploadobj.header;
+                    const headers = new HttpHeaders(uploadobj.header);
 
                     let url = uploadobj.href;
 
                     url = url.replace('https://github-cloud.s3.amazonaws.com', '');
 
-                    return this.http.put(url, contents.buffer, {headers: headers})
+                    return this.http.request(
+                            new HttpRequest<any>('PUT', url, contents, {headers: headers, reportProgress: true})
+                        )
                         .pipe(
+                            tap((event: HttpEvent<any>) => {
+                                if (event.type === HttpEventType.UploadProgress) {
+                                    const percentDone = Math.round(100 * event.loaded / event.total);
+                                    this.currentStatus.next(`Uploading ${formatBytes(event.loaded)} ( ${percentDone} % )`);
+                                } else if (event.type === HttpEventType.Response) {
+                                    return event.body;
+                                }
+                                return event;
+                            }),
+                            last(),
                             mergeMap(() => verifyobj ?
                                 this.http.post(verifyobj.href.replace('https://lfs.github.com', ''), {
                                     oid: sha256sum,

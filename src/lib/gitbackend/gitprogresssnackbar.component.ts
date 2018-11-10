@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { FileBrowserService } from '../filebrowser.service';
 import { GitBackendService } from './gitbackend.service';
 import { MatSnackBarRef, MatSnackBar } from '@angular/material';
 import { Subject } from 'rxjs';
