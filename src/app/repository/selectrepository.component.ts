@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { CredientialsService } from './credentials.service';
 
 @Component({
     templateUrl: 'selectrepository.component.html'
@@ -9,7 +10,8 @@ export class SelectRepositoryComponent {
     gitrepositoryurl = 'https://github.com/fintechneo/browsergittestdata.git';
 
     constructor(
-        private router: Router
+        private router: Router,
+        public credentialsService: CredientialsService
     ) {
 
     }

@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 import { RepositoryService } from './repository.service';
 import { FileActionsHandler } from '../../lib/fileactionshandler.interface';
-import { FileBrowserService, FileInfo } from '../../lib/filebrowser.module';
+import { FileBrowserService, FileInfo, GitBackendService } from '../../lib/filebrowser.module';
 import { FilesChangeEvent } from '../../lib/fileschangeevent.class';
 
 @Component({
@@ -15,6 +15,7 @@ import { FilesChangeEvent } from '../../lib/fileschangeevent.class';
 export class RepositoryBrowserComponent {
 
     fileActionsHandler: FileActionsHandler;
+    gitbackendservice: GitBackendService;
 
     hideFileIfStartingWithDotFilter = (fileInfo: FileInfo): boolean => {
         return fileInfo.name.indexOf('.') === 0 ? false : true;
@@ -27,6 +28,8 @@ export class RepositoryBrowserComponent {
         private repositoryservice: RepositoryService,
         http: HttpClient
     ) {
+        this.gitbackendservice = filebrowserservice as GitBackendService;
+
         this.fileActionsHandler = new class implements FileActionsHandler {
 
             editFile(fileInfo: FileInfo): boolean {

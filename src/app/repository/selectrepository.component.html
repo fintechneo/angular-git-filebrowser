@@ -8,6 +8,21 @@
             <mat-form-field style="width: 300px; margin-right: 5px">
                 <input matInput [(ngModel)]="gitrepositoryurl" placeholder="Git repository URL"  />
             </mat-form-field>
+            <mat-form-field>
+                <input matInput [(ngModel)]="credentialsService.username" type="text" placeholder="Username" />                
+            </mat-form-field>
+            <mat-form-field>
+                <input matInput [(ngModel)]="credentialsService.password" type="password" placeholder="Password" />
+            </mat-form-field>
+            <mat-form-field style="width: 300px; margin-right: 5px">
+                <input matInput [(ngModel)]="credentialsService.proxyhost" placeholder="Proxy host"  />
+            </mat-form-field>
+            <mat-form-field>
+                <input matInput [(ngModel)]="credentialsService.gitname" type="text" placeholder="Git commit name" />                
+            </mat-form-field>
+            <mat-form-field>
+                <input matInput [(ngModel)]="credentialsService.gitemail" type="text" placeholder="Git commit email" />
+            </mat-form-field>
         </div>        
     </mat-card-content>
     <mat-card-actions>

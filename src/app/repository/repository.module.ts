@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { MatSidenavModule, MatListModule,
     MatInputModule, MatCardModule, MatToolbarModule,
-        MatIconModule, MatButtonModule, MatPaginatorModule, MatTableModule } from '@angular/material';
+        MatIconModule, MatButtonModule, MatPaginatorModule, MatTableModule, MatCheckboxModule } from '@angular/material';
 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,6 +13,7 @@ import { FileBrowserModule } from '../../lib/filebrowser.module';
 import { LayoutHelperModule } from '../../lib/layout/layouthelper.module';
 import { SelectRepositoryComponent } from './selectrepository.component';
 import { SingleDirectoryViewComponent } from './singledirectoryview.component';
+import { CredientialsService } from './credentials.service';
 
 @NgModule({
     imports: [
@@ -24,6 +25,7 @@ import { SingleDirectoryViewComponent } from './singledirectoryview.component';
         MatIconModule,
         MatInputModule,
         MatListModule,
+        MatCheckboxModule,
         MatTableModule,
         MatPaginatorModule,
         MatToolbarModule,
@@ -64,6 +66,9 @@ import { SingleDirectoryViewComponent } from './singledirectoryview.component';
         RepositoryBrowserComponent,
         LogComponent,
         RepositoryComponent
+    ],
+    providers: [
+        CredientialsService
     ]
 })
 export class RepositoryModule {
