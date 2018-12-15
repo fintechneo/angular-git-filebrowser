@@ -5,10 +5,9 @@
 import { Input, ViewChild, Component, Renderer2, AfterViewInit,
     OnInit, HostListener, OnDestroy, EventEmitter, Output } from '@angular/core';
 import { MatSnackBar, MatDialog } from '@angular/material';
-import { Observable } from 'rxjs/Observable';
+import { Observable ,  from } from 'rxjs';
 
 import { mergeMap, map, take, bufferCount, filter } from 'rxjs/operators';
-import { from } from 'rxjs/observable/from';
 import { FileBrowserService } from './filebrowser.service';
 import { FileInfo } from './filebrowser.service';
 import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.component';

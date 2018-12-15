@@ -31,7 +31,5 @@ import { RepositoryModule } from './repository/repository.module';
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor() {
-
-  }
+  
 }

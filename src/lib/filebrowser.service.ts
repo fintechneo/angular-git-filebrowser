@@ -1,6 +1,5 @@
 
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject ,  Observable } from 'rxjs';
 import { OnDestroy } from '@angular/core';
 
 export class FileInfo {

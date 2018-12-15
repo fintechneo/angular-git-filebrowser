@@ -1,15 +1,10 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { AsyncSubject } from 'rxjs/AsyncSubject';
-import { Observable } from 'rxjs/Observable';
+import { AsyncSubject ,  Observable ,  BehaviorSubject ,  of ,  from as fromPromise ,  throwError } from 'rxjs';
 import { FileBrowserService } from '../filebrowser.service';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { FileInfo } from '../filebrowser.service';
 import { mergeMap, map, tap, take, last } from 'rxjs/operators';
-import { of } from 'rxjs/observable/of';
-import { fromPromise } from 'rxjs/observable/fromPromise';
 import { HttpHeaders, HttpClient, HttpEventType, HttpEvent, HttpRequest } from '@angular/common/http';
 import { ConflictPick, hasConflicts, getConflictVersion } from './resolveconflict';
-import { throwError } from 'rxjs';
 
 /*
  * These are used in the worker - but we declare them here so that typescript doesn't complain
