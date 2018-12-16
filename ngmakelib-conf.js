@@ -15,5 +15,7 @@ ngMakeLib.addAssets([
 if(process.argv[process.argv.length-1] === '--watch') {
     ngMakeLib.watch();
 } else {
+    ngMakeLib.packageJSONConfig.dependencies = {};
+    ngMakeLib.packageJSONConfig.devDependencies = {};
     ngMakeLib.build();
 }
