@@ -226,7 +226,29 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             );
     }
 
-    readdir(): Observable<FileInfo[]> {
+    /* replacement which should behave the same as original if path is not set
+     * if path is set just return a vinalla observable list of file names.
+     */
+    readdir(path?: string) : Observable<any>  {      // Observable<string[]> | Observable<FileInfo[]> {
+        if (!path) {
+            return this._readdirFileInfo();
+        } 
+        return this._readdirString(path);
+    }
+
+    /*
+     * simple readdir list the files names in the path and return as string array
+     */
+    _readdirString(path: string): Observable<string[]> {
+        return this.callWorker2((params) =>
+            FS.readdir(params.path), { path: path });
+    }
+
+
+    /*
+     * Original readdir  returns FileInfo[] and has sideeffects.
+     */
+    _readdirFileInfo(): Observable<FileInfo[]> {
         return this.callWorker2(() =>
                 FS.readdir('.')
                     .map(name => Object.assign({

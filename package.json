@@ -1,6 +1,6 @@
 {
   "name": "angular-filebrowser",
-  "version": "0.0.43",
+  "version": "0.0.44",
   "license": "MIT",
   "description": "Angular filebrowser backed by git repository in the browser",
   "homepage": "https://github.com/fintechneo/angular-git-filebrowser",
@@ -34,6 +34,7 @@
     "@angular/router": "^7.1.3",
     "rxjs": "^6.3.3",
     "rxjs-compat": "^6.2.2",
+    "tsickle": "^0.34.0",
     "zone.js": "^0.8.26"
   },
   "devDependencies": {
