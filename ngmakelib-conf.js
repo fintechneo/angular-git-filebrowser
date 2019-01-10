@@ -15,7 +15,9 @@ ngMakeLib.addAssets([
 if(process.argv[process.argv.length-1] === '--watch') {
     ngMakeLib.watch();
 } else {
-    ngMakeLib.packageJSONConfig.dependencies = {};
+    ngMakeLib.packageJSONConfig.dependencies = {
+        "deep-diff": "1.0.2"
+    };
     ngMakeLib.packageJSONConfig.devDependencies = {};
     ngMakeLib.build();
 }

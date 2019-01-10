@@ -1,7 +1,33 @@
+import { diff, applyChange} from 'deep-diff';
+
 export enum ConflictPick {
     MINE,
     OLD,
     YOURS
+}
+
+export function getJSONConflictVersion(text, pick) {
+    const originalText = getConflictVersion(text, 1);
+    if(pick===1) {        
+        return originalText;
+    }
+    
+    const original = JSON.parse(originalText);
+    const mine = JSON.parse(getConflictVersion(text, 0));
+    const yours = JSON.parse(getConflictVersion(text, 2));
+
+    const minePatch = diff(original, mine);
+    const yourPatch = diff(original, yours);
+
+    
+    if(pick===0) {
+        yourPatch.forEach(change => applyChange(original,null, change));
+        minePatch.forEach(change => applyChange(original,null, change));
+    } else if(pick === 2) {
+        minePatch.forEach(change => applyChange(original,null, change));
+        yourPatch.forEach(change => applyChange(original,null, change));
+    }
+    return JSON.stringify(original, null, 1);
 }
 
 export function getConflictVersion(text: string, pick: ConflictPick): string {

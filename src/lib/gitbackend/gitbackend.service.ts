@@ -4,7 +4,7 @@ import { FileBrowserService } from '../filebrowser.service';
 import { FileInfo } from '../filebrowser.service';
 import { mergeMap, map, tap, take, last } from 'rxjs/operators';
 import { HttpHeaders, HttpClient, HttpEventType, HttpEvent, HttpRequest } from '@angular/common/http';
-import { ConflictPick, hasConflicts, getConflictVersion } from './resolveconflict';
+import { ConflictPick, hasConflicts, getConflictVersion, getJSONConflictVersion } from './resolveconflict';
 
 /*
  * These are used in the worker - but we declare them here so that typescript doesn't complain
@@ -443,7 +443,9 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             .pipe(
                 mergeMap(contents => {
                     if (hasConflicts(contents)) {
-                        const resolved = getConflictVersion(contents, chosenConclictSide);
+                        const resolved = filename.endsWith('.json') ? 
+                            getJSONConflictVersion(contents, chosenConclictSide) :
+                            getConflictVersion(contents, chosenConclictSide);
                         return this.saveTextFile(filename, resolved)
                             .pipe(map(() => resolved));
                     } else {
