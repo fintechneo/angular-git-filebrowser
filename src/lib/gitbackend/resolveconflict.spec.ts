@@ -1,4 +1,4 @@
-import { ConflictPick, resolveNextConflict, hasConflicts } from './resolveconflict';
+import { ConflictPick, resolveNextConflict, hasConflicts, getConflictVersion, getJSONConflictVersion } from './resolveconflict';
 
 const conflictJSONstring = `{
 "id": null,
@@ -50,5 +50,34 @@ describe('ResolveGitConflictTest', () => {
         expect(hasConflicts(minestring)).toBeFalsy();
         expect(hasConflicts(oldstring)).toBeFalsy();
         expect(hasConflicts(yoursstring)).toBeFalsy();
+    });
+
+    it('should resolve JSON conflict', () => {
+        console.log('Testing resolving diff3 conflicts with JSON merger');
+        
+        const mine = JSON.parse(getJSONConflictVersion(conflictJSONstring, ConflictPick.MINE));
+        const old = JSON.parse(getJSONConflictVersion(conflictJSONstring, ConflictPick.OLD));
+        const yours = JSON.parse(getJSONConflictVersion(conflictJSONstring, ConflictPick.YOURS));
+
+        expect(
+            mine.title
+        ).toEqual('Test test 7060 - changed title');
+        expect(
+            mine.locationName
+        ).toEqual('changed location');
+
+        expect(
+            yours.title
+        ).toEqual('Test test 7060 - changed title');
+        expect(
+            yours.locationName
+        ).toEqual('changed location');
+
+        expect(
+            old.locationName
+        ).toEqual('wwewe derefetet');
+        expect(
+            old.title
+        ).toEqual('Test test 7060');        
     });
 });
