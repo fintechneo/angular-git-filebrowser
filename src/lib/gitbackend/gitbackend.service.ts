@@ -46,6 +46,11 @@ function formatBytes(a, b?): string {
     return parseFloat((a / Math.pow(c, f)).toFixed(d)) + ' ' + e[f];
 }
 
+class LFSDownloadInfo {
+    href: string;
+    headers: HttpHeaders;
+}
+
 @Injectable()
 export class GitBackendService extends FileBrowserService implements OnDestroy {
 
@@ -401,14 +406,17 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     const lfsPointerLines = url.split('\n');
                     const filesize = parseInt(lfsPointerLines[2].substring('size '.length), 10);
 
-                    return this.getLFSDownloadURL(url)
+                    return this.getLFSDownloadInfo(url)
                         .pipe(
-                            mergeMap((downloadurl: string) => {
-                                downloadurl = this.replaceWithProxyHost(downloadurl);
+                            mergeMap((downloadobj) => {
+                                const downloadurl = this.replaceWithProxyHost(downloadobj.href);
                                 const req = new HttpRequest(
                                     'GET',
-                                    downloadurl,
-                                    { responseType: 'blob', reportProgress: true }
+                                    downloadurl,                                    
+                                    {   
+                                        headers: downloadobj.headers,
+                                        responseType: 'blob', reportProgress: true
+                                    }
                                 );
                                 return this.http.request(req)
                                     .pipe(
@@ -851,7 +859,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         );
     }
 
-    getLFSDownloadURL(lfsPointer: string): Observable<string> {
+    getLFSDownloadInfo(lfsPointer: string): Observable<LFSDownloadInfo> {
         const lfsPointerLines = lfsPointer.split('\n');
         const sha256sum = lfsPointerLines[1].substring('oid sha256:'.length);
         const size = parseInt(lfsPointerLines[2].substring('size '.length), 10);
@@ -876,7 +884,18 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     }
                 }
         ).pipe(map(
-            (ret: any) => ret.objects[0].actions.download.href
+            (ret: any) => {
+                const downloadobj = ret.objects[0].actions.download;
+                const url = downloadobj.href;
+                let headers = null;
+                if(downloadobj.header) {
+                    headers = new HttpHeaders(downloadobj.header);
+                }
+                return {
+                    href: url,
+                    headers: headers
+                };
+            }
         ));
     }
 
