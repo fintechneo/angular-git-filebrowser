@@ -551,7 +551,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             }
             const recursedir = (path) =>
                 FS.readdir(path)
-                    .filter((f: string) => !f.startsWith('.'))
+                    .filter((f: string) =>  !(f=== '.'  || f === '..' ))
                     .forEach((f: string) => {
                         const deletepath = path + '/' + f;
                         console.log('Deleting', deletepath);
