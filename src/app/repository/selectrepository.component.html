@@ -8,12 +8,16 @@
             <mat-form-field style="width: 300px; margin-right: 5px">
                 <input matInput [(ngModel)]="gitrepositoryurl" placeholder="Git repository URL"  />
             </mat-form-field>
-            <mat-form-field>
-                <input matInput [(ngModel)]="credentialsService.username" type="text" placeholder="Username" />                
-            </mat-form-field>
-            <mat-form-field>
-                <input matInput [(ngModel)]="credentialsService.password" type="password" placeholder="Password" />
-            </mat-form-field>
+            <ng-container *ngIf="!anonymous">
+                <mat-form-field>
+                    <input matInput [(ngModel)]="credentialsService.username" type="text" placeholder="Username" />                
+                </mat-form-field>
+                <mat-form-field>
+                    <input matInput [(ngModel)]="credentialsService.password" type="password" placeholder="Password" />
+                </mat-form-field>
+            </ng-container>
+            <mat-checkbox [(ngModel)]="anonymous" (change)="toggleAnonymous($event)">ANONYMOUS (clone/pull only)</mat-checkbox>
+            <span>&nbsp;</span>
             <mat-form-field style="width: 300px; margin-right: 5px">
                 <input matInput [(ngModel)]="credentialsService.proxyhost" placeholder="Proxy host"  />
             </mat-form-field>

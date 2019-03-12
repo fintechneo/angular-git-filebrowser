@@ -27,7 +27,8 @@ export class RepositoryService implements OnDestroy {
         credentialsService.storeCredentialsInSessionStorage();
         this.gitbackendservice = this.filebrowserservice as GitBackendService;
         this.gitbackendservice.convertUploadsToLFSPointer = true;
-        const basicAuthHeader = 'Basic ' + btoa(`${credentialsService.username}:${credentialsService.password}`);
+        const basicAuthHeader = credentialsService.password ?
+            'Basic ' + btoa(`${credentialsService.username}:${credentialsService.password}`) : null;
         this.gitbackendservice.proxyHost = credentialsService.proxyhost;
         this.gitbackendservice.gitLFSAuthorizationHeaderValue = basicAuthHeader;
 
@@ -37,11 +38,13 @@ export class RepositoryService implements OnDestroy {
             tap(params => this.workdir = params.repository),
             mergeMap(params => this.gitbackendservice.mount(params.repository)),
             mergeMap(isGitRepo => {
-                this.gitbackendservice.setHeaders(
-                    new HttpHeaders(
-                        {'Authorization': basicAuthHeader
-                    }
-                ));
+                if(basicAuthHeader) {
+                    this.gitbackendservice.setHeaders(
+                        new HttpHeaders(
+                            {'Authorization': basicAuthHeader
+                        }
+                    ));
+                }
                 this.gitbackendservice.setUser(
                     credentialsService.gitname, credentialsService.gitemail
                 );
@@ -60,6 +63,8 @@ export class RepositoryService implements OnDestroy {
             console.log('File system ready', ret);
             this.filesysReadySubject.next(true);
             this.filesysReadySubject.complete();
+        },err => {
+            this.snackBar.open(err.message,'Dismiss');
         });
     }
 

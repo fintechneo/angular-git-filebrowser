@@ -219,11 +219,20 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 mergeMap(() =>
                     this.callWorker2((params) => {
                             self.jsgitclone(params.url, self.workdir);
-                            self.jsgitstatusresult = [];
-                            FS.chdir(self.workdir);
-                            self.jsgitsetuser(self.gituserfullname, self.gituseremail);
+                            if(!self.jsgitgetlasterror()) {
+                                self.jsgitstatusresult = [];
+                                FS.chdir(self.workdir);
+                                self.jsgitsetuser(self.gituserfullname, self.gituseremail);
+                                self.jsgitgetlasterror();
+                            }    
+                            return self.jsgitlasterrorresult;
                         }, {url: url})
                 ),
+                map(err => {
+                    if(err && err.klass) {
+                        throw err;
+                    }
+                }),
                 mergeMap(() => this.syncLocalFS(false)),
                 tap(() => this.repositoryOpen = true),
                 tap(() => this.updateAllDirListeners()),
@@ -588,18 +597,35 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         this.currentStatus.next('Pushing local changes to server');
         return this.callWorker2(() => {
                     self.jsgitpush();
+                    self.jsgitgetlasterror();
+                    return self.jsgitlasterrorresult;
                 }, {}
-            ).pipe(tap(() => this.currentStatus.next(null)));
+            ).pipe(
+                map(err => {
+                    if(err && err.klass) {
+                        throw err;
+                    }
+                }),
+                tap(() => this.currentStatus.next(null))
+            );
     }
 
     pull() {
         this.currentStatus.next('Pulling recent changes from server');
         return this.callWorker2(() => {
                     self.jsgitpull();
+                    self.jsgitgetlasterror();
                     // Update status after pull
                     self.jsgitstatus();
+                    
+                    return self.jsgitlasterrorresult;
                 }, {}
         ).pipe(
+            map(err => {
+                if(err && err.klass) {
+                    throw err;
+                }
+            }),
             tap(() => this.currentStatus.next(null)),
             mergeMap(() => this.readdir()),
             mergeMap(() => this.syncLocalFS(false)),
