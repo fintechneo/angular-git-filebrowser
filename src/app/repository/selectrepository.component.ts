@@ -9,6 +9,8 @@ export class SelectRepositoryComponent {
     workdir = 'workdir';
     gitrepositoryurl = 'https://github.com/fintechneo/browsergittestdata.git';
 
+    anonymous: boolean;
+
     constructor(
         private router: Router,
         public credentialsService: CredientialsService
@@ -21,5 +23,11 @@ export class SelectRepositoryComponent {
                 cloneurl: this.gitrepositoryurl
             }
         });
+    }
+
+    toggleAnonymous(state: boolean) {
+        if(state) {
+            this.credentialsService.password = null;
+        }
     }
 }
