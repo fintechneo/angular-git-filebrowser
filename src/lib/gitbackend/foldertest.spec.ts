@@ -1,5 +1,7 @@
 import { GitBackendService } from './gitbackend.service';
 import { map, take } from 'rxjs/operators';
+import { FileInfo } from '../filebrowser.service';
+import { Observable } from 'rxjs';
 
 
 describe('FolderOp', () => {
@@ -21,12 +23,11 @@ describe('FolderOp', () => {
         await gitbackendservice.saveTextFile('test.txt', 'abcdefg').pipe(take(1)).toPromise();
         await gitbackendservice.saveTextFile('.hidden', 'abcdefg').pipe(take(1)).toPromise();
 
-        const dircontents1 = await gitbackendservice.readdir()
+        const dircontents1 = await (gitbackendservice.readdir() as Observable<FileInfo[]>)
             .pipe(
                 map(
                     list => list.filter(d => d.fullpath === '/testworkdir/xyz/test.txt')
-                ),
-                take(1)
+                )
             ).toPromise();
 
         expect(dircontents1.length).toBe(1);
@@ -36,10 +37,7 @@ describe('FolderOp', () => {
         
         await gitbackendservice.rmdir('xyz').pipe(take(1)).toPromise();
 
-        const dircontents2 = await gitbackendservice.readdir()
-            .pipe(
-                take(1)
-            ).toPromise();
+        const dircontents2 = await (gitbackendservice.readdir() as Observable<FileInfo[]>).toPromise();
 
 
         expect(dircontents2.filter(d => d.fullpath === '/testworkdir/xyz/test.txt').length).toBe(0);

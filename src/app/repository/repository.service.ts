@@ -3,8 +3,8 @@ import { MatSnackBar, MatSnackBarRef, SimpleSnackBar } from '@angular/material';
 import { ActivatedRoute } from '@angular/router';
 import { HttpHeaders } from '@angular/common/http';
 
-import { Observable, AsyncSubject } from 'rxjs';
-import { mergeMap, tap } from 'rxjs/operators';
+import { Observable, AsyncSubject, of } from 'rxjs';
+import { mergeMap, tap, catchError } from 'rxjs/operators';
 import { GitBackendService, FileBrowserService } from '../../lib/filebrowser.module';
 import { GitProgressSnackbarComponent } from '../../lib/gitbackend/gitprogresssnackbar.component';
 import { CredientialsService } from './credentials.service';
@@ -80,7 +80,15 @@ export class RepositoryService implements OnDestroy {
             return gitbackend.commitChanges()
                 .pipe(
                     mergeMap(() => gitbackend.pull()),
+                    catchError(e => 
+                            this.snackBar.open(`Unable to pull changes from server: ${e.message}`, 'Dismiss')
+                                .afterDismissed()                            
+                    ),
                     mergeMap(() => gitbackend.push()),
+                    catchError(e => 
+                        this.snackBar.open(`Unable to push changes to server: ${e.message}`, 'Dismiss')
+                            .afterDismissed()
+                    ),
                     tap(() => {
                         this.synchronizeLockSubject.next(true);
                         this.synchronizeLockSubject.complete();
