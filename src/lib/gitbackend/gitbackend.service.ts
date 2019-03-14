@@ -144,7 +144,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         }, {workdir: dir})
         ).pipe(
             mergeMap(() => this.syncLocalFS(true)),
-            mergeMap(() => this.readdir()),
+            mergeMap(() => this.readdir() as Observable<FileInfo[]>),
             mergeMap((ret) => {
                 const hasGitRepo = ret.find(file => file.name === '.git');
                 if (hasGitRepo) {
@@ -175,6 +175,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
      * Convert function to string source code and send it to the worker for evaluation
      * @param func the function to send
      * @param params an object that will be JSON stringified and passed to the function
+     * @returns a promise that with the result of the operation
      */
     callWorker(func, params?: any): Promise<any> {
         return new Promise((resolve, reject) => {
@@ -194,6 +195,12 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         });
     }
 
+    /**
+     * 
+     * @param func the function to send to the worker
+     * @param params params for the function to execute
+     * @returns an Observable with the results (completes when done)
+     */
     callWorker2(func, params?: any): Observable<any> {
         return new Observable((observer) => {
             const workermessageid = this.workermessageid++;
@@ -203,12 +210,19 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                 } else {
                     observer.next(result);
                 }
+                observer.complete();
             };
             this.worker.postMessage({
                 func: func.toString(),
                 params: params,
                 id: workermessageid
             });
+        });
+    }
+
+    initRepository(): Observable<any> {
+        return this.callWorker2(() => {
+            self.jsgitinitrepo();
         });
     }
 
@@ -240,12 +254,14 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             );
     }
 
-    /* replacement which should behave the same as original if path is not set
-     * if path is set just return a vinalla observable list of file names.
+    /**
+     * @param path if not given, will read current directory and update listeners,
+     * otherwise return a string array with the filenames of the given path.
+     * @returns Observable with either string array of filenames if path is specified, or array of FileInfo if no path is specified
      */
-    readdir(path?: string) : Observable<any>  {      // Observable<string[]> | Observable<FileInfo[]> {
+    readdir(path?: string): Observable<string[]> | Observable<FileInfo[]> {
         if (!path) {
-            return this._readdirFileInfo();
+            return this.readCurrentDirAndUpdateListeners();
         } 
         return this._readdirString(path);
     }
@@ -253,16 +269,16 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
     /*
      * simple readdir list the files names in the path and return as string array
      */
-    _readdirString(path: string): Observable<string[]> {
+    private _readdirString(path: string): Observable<string[]> {
         return this.callWorker2((params) =>
             FS.readdir(params.path), { path: path });
     }
 
 
     /*
-     * Original readdir  returns FileInfo[] and has sideeffects.
+     * Read contents from current directory and notify the fileList subject and single dir listeners
      */
-    _readdirFileInfo(): Observable<FileInfo[]> {
+    readCurrentDirAndUpdateListeners(): Observable<FileInfo[]> {
         return this.callWorker2(() =>
                 FS.readdir('.')
                     .map(name => Object.assign({
@@ -357,7 +373,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         });
     }
 
-    commitChanges(): Observable<any> {
+    commitChanges(commitmessage?: string): Observable<any> {
         return fromPromise(this.callWorker((params) => {
             self.jsgitstatus();
 
@@ -371,7 +387,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             if (self.jsgitworkdirnumberofdeltas() > 0
                 || noconflictstatusresults.length > 0) {
 
-                    noconflictstatusresults.forEach(p => {
+                noconflictstatusresults.forEach(p => {
                     if (p.status === 'deleted') {
                         self.jsgitremove(p.path);
                     } else {
@@ -386,14 +402,28 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     }
                 });
                 self.jsgitaddfileswithchanges();
+                let commitmessage = params.commitmessage;
+                if(!commitmessage) {
+                    const statusCount = {};
+                    noconflictstatusresults.forEach(r => {
+                        if(!statusCount[r.status]) {
+                            statusCount[r.status] = [];
+                        }
+                        statusCount[r.status].push(r.path);
+                    });
+                    commitmessage = Object.keys(statusCount)
+                        .map(statusName => `${statusName} ${statusCount[statusName].length} ` +
+                            `(${statusCount[statusName].join(',')})`)
+                        .join(', ');
+                }
                 self.jsgitcommit(
-                    'Revision ' + new Date().toJSON()
+                    commitmessage
                 );
                 console.log('Changes committed');
             } else {
                 console.log('No changes');
             }
-        })).pipe(
+        },{commitmessage: commitmessage})).pipe(
             mergeMap(() => this.syncLocalFS(false))
         );
     }
