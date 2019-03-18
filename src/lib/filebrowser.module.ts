@@ -16,7 +16,7 @@ import { GitProgressSnackbarComponent } from './gitbackend/gitprogresssnackbar.c
 export { GitProgressSnackbarComponent } from './gitbackend/gitprogresssnackbar.component';
 export { FileBrowserComponent } from './filebrowser.component';
 export { FileBrowserService, FileInfo } from './filebrowser.service';
-export { GitBackendService } from './gitbackend/gitbackend.service';
+export { GitBackendService, GIT_MERGE_FILE_FAVOR } from './gitbackend/gitbackend.service';
 export * from './gitbackend/resolveconflict';
 
 @NgModule({

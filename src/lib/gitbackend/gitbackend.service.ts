@@ -15,6 +15,13 @@ declare var FS;
 declare var IDBFS;
 declare var self;
 
+export enum GIT_MERGE_FILE_FAVOR { 
+    GIT_MERGE_FILE_FAVOR_NORMAL,
+    GIT_MERGE_FILE_FAVOR_OURS,
+    GIT_MERGE_FILE_FAVOR_THEIRS,
+    GIT_MERGE_FILE_FAVOR_UNION
+};
+
 function hex(buffer) {
     const hexCodes = [];
     const view = new DataView(buffer);
@@ -640,16 +647,16 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
             );
     }
 
-    pull() {
+    pull(git_merge_file_favor: number = GIT_MERGE_FILE_FAVOR.GIT_MERGE_FILE_FAVOR_NORMAL) {
         this.currentStatus.next('Pulling recent changes from server');
-        return this.callWorker2(() => {
-                    self.jsgitpull();
+        return this.callWorker2((params) => {
+                    self.jsgitpull(params.git_merge_file_favor);
                     self.jsgitgetlasterror();
                     // Update status after pull
                     self.jsgitstatus();
                     
                     return self.jsgitlasterrorresult;
-                }, {}
+                }, {git_merge_file_favor: git_merge_file_favor}
         ).pipe(
             map(err => {
                 if(err && err.klass) {
