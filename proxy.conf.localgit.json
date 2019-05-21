@@ -1,0 +1,7 @@
+{
+    "/testorganization": {
+        "target": "http://localhost:15000",
+        "secure": false,
+        "changeOrigin": true
+    }
+  }

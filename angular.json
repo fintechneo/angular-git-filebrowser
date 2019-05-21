@@ -57,6 +57,18 @@
             }
           }
         },
+        "serve-e2e": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.localgit.json",
+            "browserTarget": "angular-filebrowser:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "angular-filebrowser:build:production"
+            }
+          }
+        },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
@@ -103,7 +115,7 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "./protractor.conf.js",
-            "devServerTarget": "angular-filebrowser:serve"
+            "devServerTarget": "angular-filebrowser:serve-e2e"
           }
         },
         "lint": {

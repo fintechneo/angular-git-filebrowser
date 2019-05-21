@@ -784,6 +784,7 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
         this.callWorker2((params) => {
                 self.gituserfullname = params.name;
                 self.gituseremail = params.email;
+                self.jsgitsetuser(self.gituserfullname, self.gituseremail);
             },
             {name: name, email: email}
         ).subscribe();
