@@ -889,7 +889,8 @@ export class GitBackendService extends FileBrowserService implements OnDestroy {
                     const uploadobj = ret.objects[0].actions.upload;
                     const verifyobj = ret.objects[0].actions.verify;
 
-                    const headers = new HttpHeaders(uploadobj.header);
+                    let headers = new HttpHeaders(uploadobj.header);
+                    headers = headers.append('ngsw-bypass', 'true');
 
                     let url = uploadobj.href;
 
