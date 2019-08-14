@@ -14,6 +14,7 @@ import { LayoutHelperModule } from '../../lib/layout/layouthelper.module';
 import { SelectRepositoryComponent } from './selectrepository.component';
 import { SingleDirectoryViewComponent } from './singledirectoryview.component';
 import { CredientialsService } from './credentials.service';
+import { UploadUsingLFSDialogComponent } from './uploadusinglfsdialog.component';
 
 @NgModule({
     imports: [
@@ -65,7 +66,11 @@ import { CredientialsService } from './credentials.service';
         SingleDirectoryViewComponent,
         RepositoryBrowserComponent,
         LogComponent,
-        RepositoryComponent
+        RepositoryComponent,
+        UploadUsingLFSDialogComponent
+    ],
+    entryComponents: [
+        UploadUsingLFSDialogComponent
     ],
     providers: [
         CredientialsService

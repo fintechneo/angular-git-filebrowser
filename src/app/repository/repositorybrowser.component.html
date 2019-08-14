@@ -1,6 +1,5 @@
 <mat-card>
-    <mat-card-content>       
-        <mat-checkbox [(ngModel)]="gitbackendservice.convertUploadsToLFSPointer">Use LFS for uploads</mat-checkbox>          
+    <mat-card-content>
         <app-filebrowser 
             [fileInfoFilter]="hideFileIfStartingWithDotFilter"
             [fileActionsHandler]="fileActionsHandler"
