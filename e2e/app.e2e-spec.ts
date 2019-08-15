@@ -26,7 +26,7 @@ describe('angular-filebrowser App', () => {
     page.navigateTo();
     gitserver.addLogExpectation('GET /testorganization/testrepo/info/refs?service=git-upload-pack');
     await page.setGitRepositoryUrlInputAndClone();
-    await page.deactivateLFSAndUploadFile('README.md');
+    await page.uploadFileWithoutLFS('README.md');
     expect(gitserver.areLogExpectationsMet()).toBe(true);
 
     const gitlog = gitserver.gitLog('testorganization', 'testrepo');
@@ -38,7 +38,7 @@ describe('angular-filebrowser App', () => {
     page.navigateTo();
     gitserver.addLogExpectation('GET /testorganization/testrepo/info/refs?service=git-upload-pack');
     await page.setUserAndPull();
-    await page.deactivateLFSAndUploadFile('angular.json');
+    await page.uploadFileWithoutLFS('angular.json');
     expect(gitserver.areLogExpectationsMet()).toBe(true);
 
     const gitlog = gitserver.gitLog('testorganization', 'testrepo');

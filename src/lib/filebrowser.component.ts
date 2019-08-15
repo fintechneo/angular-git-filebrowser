@@ -2,12 +2,12 @@
  *  Copyright 2010-2018 FinTech Neo AS ( fintechneo.com )- All rights reserved
  */
 
-import { Input, ViewChild, Component, Renderer2, AfterViewInit,
+import { Input, ViewChild, Component, AfterViewInit,
     OnInit, HostListener, OnDestroy, EventEmitter, Output } from '@angular/core';
-import { MatSnackBar, MatDialog } from '@angular/material';
-import { Observable ,  from } from 'rxjs';
+import { MatDialog } from '@angular/material';
+import { Observable ,  from, of } from 'rxjs';
 
-import { mergeMap, map, take, bufferCount, filter } from 'rxjs/operators';
+import { mergeMap, map, take, bufferCount, filter, tap } from 'rxjs/operators';
 import { FileBrowserService } from './filebrowser.service';
 import { FileInfo } from './filebrowser.service';
 import { SimpleTextEditorDialogComponent } from './simpletexteditordialog.component';
@@ -38,8 +38,6 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
     fileList: Observable<FileInfo[]>;
 
     constructor(
-        private renderer: Renderer2,
-        private snackbar: MatSnackBar,
         private dialog: MatDialog,
         public filebrowserservice: FileBrowserService
     ) {
@@ -146,8 +144,13 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
     public uploadFiles(files: FileList) {
         const numfiles = files.length;
 
-        from(Array.from(files).map(file =>
-            this.filebrowserservice.uploadFile(file)
+        from(Array.from(files).map(file => 
+            this.fileActionsHandler ? this.fileActionsHandler.beforeUpload(file)
+                .pipe(
+                    mergeMap((proceed) =>
+                        proceed ? this.filebrowserservice.uploadFile(file) : of(false)
+                )
+            ) : this.filebrowserservice.uploadFile(file)
         )).pipe(
             mergeMap(o =>
                 o.pipe(

@@ -30,11 +30,7 @@ export class AppPage {
     await browser.wait(async () => (await browser.getCurrentUrl()).indexOf('/browse') > 0, 10000);    
   }
 
-  async deactivateLFSAndUploadFile(filename: string) {
-    const lfsCheckbox = element(by.cssContainingText('mat-checkbox', 'Use LFS for uploads'));
-    await browser.wait(() => lfsCheckbox.isPresent(), 2000);
-    await lfsCheckbox.click();
-
+  async uploadFileWithoutLFS(filename: string) {
     await new Promise(r => setTimeout(r, 1000));
 
     const fileInputElement = element(by.css('input[type=file]'));
