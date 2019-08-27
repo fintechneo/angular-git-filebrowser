@@ -227,8 +227,12 @@ export class FileBrowserComponent implements OnInit, AfterViewInit, OnDestroy {
                         .afterClosed()
                 ),
                 filter(res => res ? true : false),
-                mergeMap((res) => this.filebrowserservice.saveTextFile(file.name, res))
-            ).subscribe();
+		mergeMap((res) => this.filebrowserservice.saveTextFile(file.name, res)),
+		tap(() => this.fileschanges.emit(
+                	new FilesChangeEvent(FileChangeEventType.SAVE_FILE,
+	                    [file, this.newFileName]))
+   	    	)
+        ).subscribe();
     }
 
     ngOnDestroy() {
